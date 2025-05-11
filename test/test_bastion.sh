@@ -92,6 +92,7 @@ echo "Command: bastion_connect.sh $PUBLIC_IP $POLYBOT_PRIVATE_IP curl $YOLO_PRIV
 echo -e "-----------------------------------------------------------------------------------------------------------------"
 
 export KEY_PATH=$(pwd)/private_key
+echo KEY_PATH
 OUTPUT=$(bash bastion_connect.sh $PUBLIC_IP $POLYBOT_PRIVATE_IP curl --silent --output /dev/null --write-out '%{http_code}' $YOLO_PRIVATE_IP:8080/health)
 
 if [ $? -ne "0" ]
