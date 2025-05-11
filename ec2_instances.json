@@ -1,5 +1,5 @@
 {
-      "bastion_instance_public_ip": "34.243.53.138",
+      "bastion_instance_public_ip": "ec2-34-243-53-138.eu-west-1.compute.amazonaws.com",
       "polybot_instance_private_ip": "10.0.29.128",
       "yolo_instance_private_ip": "10.0.3.107"
    }
