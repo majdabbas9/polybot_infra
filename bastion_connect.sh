@@ -9,6 +9,7 @@ fi
 # Check for at least 1 argument (bastion IP)
 if [ -z "$1" ]; then
   echo "Please provide bastion IP address"
+  echo "hi"
   exit 5
 fi
 
