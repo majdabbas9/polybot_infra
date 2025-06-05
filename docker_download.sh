@@ -25,4 +25,9 @@ if ! command -v docker &> /dev/null; then
   exit 1
 fi
 
-sudo docker network create monitoring_net
+if ! sudo docker network inspect monitoring_net >/dev/null 2>&1; then
+  echo "Docker network 'monitoring_net' not found. Creating it..."
+  sudo docker network create monitoring_net
+else
+  echo "Docker network 'monitoring_net' already exists."
+fi
