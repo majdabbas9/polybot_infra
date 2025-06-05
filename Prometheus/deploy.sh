@@ -13,7 +13,7 @@ CONTAINER_NAME="myprometheus"
 
 # Pull Prometheus image
 echo "⬇ Pulling Prometheus image..."
-docker pull prom/Prometheus
+docker pull prom/prometheus
 
 # Stop and remove existing container
 echo "🧹 Cleaning up old Prometheus container (if any)..."
@@ -24,8 +24,8 @@ docker rm -f $CONTAINER_NAME 2>/dev/null
 #docker run -d \
 #  --name $CONTAINER_NAME \
 #  -p 9090:9090 \
-#  -v "$(pwd)/Prometheus:/etc/Prometheus" \
-#  prom/Prometheus \
+#  -v "$(pwd)/prometheus:/etc/prometheus" \
+#  prom/prometheus \
 #  --config.file=/etc/Prometheus/Prometheus.yml
 #
 #echo "✅ Prometheus is running at http://localhost:9090"
