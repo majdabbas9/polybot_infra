@@ -48,7 +48,7 @@ jobs:
             APP_KEY=\"${APP_KEY}\" \
             APP_DEV_CERT=\"${APP_DEV_CERT}\" \
             APP_DEV_KEY=\"${APP_DEV_KEY}\" \
-            bash deploy.sh ~/${REPO_NAME}
+            bash Nginx/deploy.sh ~/${REPO_NAME}
           '"
 
 
