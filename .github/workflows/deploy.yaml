@@ -1,5 +1,5 @@
-# The name of the workflow
-name: poly Deploy
+      # The name of the workflow
+name: infra deploy
 
 on:
   push:
@@ -33,3 +33,22 @@ jobs:
               IdentityFile ~/.ssh/private_key
               StrictHostKeyChecking no
           EOF
+
+      - name: Copy script to EC2
+
+        run: |
+          # Clone repository if it doesn't exist, otherwise pull latest changes
+          ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git pull; else git clone ${REPO_URL}; fi"
+
+      - name: nginx container deploy
+        run: |
+          ssh ec2 'bash -s' <<EOF
+          export APP_CERT="${{ secrets.APP_CERT }}"
+          export APP_KEY="${{ secrets.APP_KEY }}"
+          export APP_DEV_CERT="${{ secrets.APP_DEV_CERT }}"
+          export APP_DEV_KEY="${{ secrets.APP_DEV_KEY }}"
+          bash ${REPO_NAME}/Nginx/deploy.sh ~/${REPO_NAME}
+          
+      - name: Prometheus  container deploy
+        run: |
+          ssh ec2 "bash ${REPO_NAME}/Prometheus/deploy.sh ${REPO_NAME}/Prometheus/prometheus.yml"
