@@ -2,14 +2,7 @@
 
 # Define variables
 CONTAINER_NAME="myprometheus"
-#CONFIG_DIR="./Prometheus"
-#PROMETHEUS_YML="$CONFIG_DIR/Prometheus.yml"
-
-# Ensure the config file exists
-#if [ ! -f "$PROMETHEUS_YML" ]; then
-#  echo "❌ prometheus.yml not found in $CONFIG_DIR"
-#  exit 1
-#fi
+PROMETHEUS_YML_PATH=$1
 
 # Pull Prometheus image
 echo "⬇ Pulling Prometheus image..."
@@ -21,8 +14,10 @@ sudo docker rm -f $CONTAINER_NAME 2>/dev/null
 
 ## Run Prometheus container with mounted config
 echo "🚀 Starting Prometheus container..."
-sudo docker run -d \
-  --name $CONTAINER_NAME \
-  -p 9090:9090 \
+sudo docker run \
+  --name $CONTAINER_NAME -d \
+  -p 127.0.0.1:9090:9090 \
+  -v PROMETHEUS_YML_PATH:/etc/prometheus/prometheus.yml \
+  prom/prometheus
 
 echo "✅ Prometheus is running at http://localhost:9090"
