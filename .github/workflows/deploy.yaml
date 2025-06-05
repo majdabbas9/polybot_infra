@@ -48,7 +48,7 @@ jobs:
             APP_KEY=\"${APP_KEY}\" \
             APP_DEV_CERT=\"${APP_DEV_CERT}\" \
             APP_DEV_KEY=\"${APP_DEV_KEY}\" \
-            bash deploy_dev.sh ~/${REPO_NAME}
+            bash deploy.sh ~/${REPO_NAME}
           '"
 
 
