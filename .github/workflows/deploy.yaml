@@ -43,13 +43,13 @@ jobs:
       - name: Execute script on EC2
         run: |
           ssh ec2 bash -c "'
-             echo $(pwd)
-#            cd ~
-#            APP_CERT=\"${APP_CERT}\" \
-#            APP_KEY=\"${APP_KEY}\" \
-#            APP_DEV_CERT=\"${APP_DEV_CERT}\" \
-#            APP_DEV_KEY=\"${APP_DEV_KEY}\" \
-#            bash Nginx/deploy.sh ~/${REPO_NAME}
+            cd ~
+            APP_CERT=\"${APP_CERT}\" \
+            APP_KEY=\"${APP_KEY}\" \
+            APP_DEV_CERT=\"${APP_DEV_CERT}\" \
+            APP_DEV_KEY=\"${APP_DEV_KEY}\" \
+            # bash Nginx/deploy.sh ~/${REPO_NAME}
+            echo $(pwd)
           '"
 
 
