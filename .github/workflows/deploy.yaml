@@ -51,8 +51,7 @@ jobs:
 
       - name: Prometheus  container deploy
         run: |
-          ssh ec2 'bash -s' <<EOF
-          bash ${REPO_NAME}/Prometheus/deploy.sh
+          ssh ec2 "bash ${REPO_NAME}/Prometheus/deploy.sh"
           
 
       
