@@ -40,15 +40,16 @@ jobs:
           # Clone repository if it doesn't exist, otherwise pull latest changes
           ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git pull; else git clone ${REPO_URL}; fi"
 
-      - name: Execute script on EC2
+      - name: Deploy to EC2
         run: |
-          ssh ec2 bash -c "'
-            cd ~
-            APP_CERT="${{ secrets.APP_CERT }}" \
-            APP_KEY="${{ secrets.APP_KEY }}" \
-            APP_DEV_CERT="${{ secrets.APP_DEV_CERT }}" \
-            APP_DEV_KEY="${{ secrets.APP_DEV_KEY }}" \
-            #bash ${REPO_NAME}/Nginx/deploy.sh ~/${REPO_NAME}
-          '"
+          ssh ec2 'bash -s' <<EOF
+          export APP_CERT="${{ secrets.APP_CERT }}"
+          export APP_KEY="${{ secrets.APP_KEY }}"
+          export APP_DEV_CERT="${{ secrets.APP_DEV_CERT }}"
+          export APP_DEV_KEY="${{ secrets.APP_DEV_KEY }}"
+          bash ${REPO_NAME}/Nginx/deploy.sh ~/${REPO_NAME}
+          
+
+      
 
 
