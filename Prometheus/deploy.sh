@@ -6,10 +6,10 @@ CONTAINER_NAME="myprometheus"
 #PROMETHEUS_YML="$CONFIG_DIR/Prometheus.yml"
 
 # Ensure the config file exists
-if [ ! -f "$PROMETHEUS_YML" ]; then
-  echo "❌ prometheus.yml not found in $CONFIG_DIR"
-  exit 1
-fi
+#if [ ! -f "$PROMETHEUS_YML" ]; then
+#  echo "❌ prometheus.yml not found in $CONFIG_DIR"
+#  exit 1
+#fi
 
 # Pull Prometheus image
 echo "⬇ Pulling Prometheus image..."
