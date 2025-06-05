@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define variables
-PROMETHEUS_YML_PATH=$1
+REPO_NAME=$1
 
 # Pull Prometheus image
 echo "⬇ Pulling Prometheus image..."
@@ -22,7 +22,7 @@ echo "🚀 Starting Prometheus container..."
 sudo docker run \
   --name myprometheus -d \
   -p 0.0.0.0:9090:9090 \
-  -v /home/ubuntu/polybot_infra/Prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
+  -v ~/$REPO_NAME/Prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
   prom/prometheus
 
 echo "✅ Prometheus is running at http://localhost:9090"
