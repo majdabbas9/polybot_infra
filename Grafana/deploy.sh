@@ -12,5 +12,5 @@ fi
 
 sudo docker run \
   --name=mygrafana -d \
-  --network monitoring_net
+  --network monitoring_net \
   -p 3000:3000 grafana/grafana
