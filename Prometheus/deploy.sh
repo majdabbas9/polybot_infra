@@ -21,6 +21,7 @@ fi
 echo "🚀 Starting Prometheus container..."
 sudo docker run \
   --name myprometheus -d \
+  --network monitoring_net
   -p 0.0.0.0:9090:9090 \
   -v ~/$REPO_NAME/Prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
   prom/prometheus

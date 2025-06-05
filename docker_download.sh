@@ -24,3 +24,5 @@ if ! command -v docker &> /dev/null; then
   echo "❌ Docker installation failed or not found. Exiting."
   exit 1
 fi
+
+sudo docker network create monitoring_net
