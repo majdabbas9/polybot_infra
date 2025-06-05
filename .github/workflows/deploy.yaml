@@ -49,7 +49,7 @@ jobs:
           export APP_DEV_KEY="${{ secrets.APP_DEV_KEY }}"
           bash ${REPO_NAME}/Nginx/deploy.sh ~/${REPO_NAME}
 
-      - name: prometheus  container deploy
+      - name: Prometheus  container deploy
         run: |
           ssh ec2 'bash -s' <<EOF
           bash ${REPO_NAME}/Prometheus/deploy.sh
