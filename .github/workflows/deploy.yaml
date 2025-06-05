@@ -35,10 +35,14 @@ jobs:
           EOF
 
       - name: Copy script to EC2
-
         run: |
           # Clone repository if it doesn't exist, otherwise pull latest changes
           ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git pull; else git clone ${REPO_URL}; fi"
+
+      - name: docker download
+        run: |
+          # Clone repository if it doesn't exist, otherwise pull latest changes
+          ssh ec2 "bash ${REPO_NAME}/docker_download.sh"
 
       - name: nginx container deploy
         run: |
@@ -52,3 +56,7 @@ jobs:
       - name: Prometheus  container deploy
         run: |
           ssh ec2 "bash ${REPO_NAME}/Prometheus/deploy.sh ${REPO_NAME}"
+
+      - name: Grafana  container deploy
+        run: |
+          ssh ec2 "bash ${REPO_NAME}/Grafana/deploy.sh ${REPO_NAME}"
