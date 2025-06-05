@@ -40,7 +40,7 @@ jobs:
           # Clone repository if it doesn't exist, otherwise pull latest changes
           ssh ec2 "if [ -d ~/${REPO_NAME} ]; then cd ~/${REPO_NAME} && git pull; else git clone ${REPO_URL}; fi"
 
-      - name: Deploy to EC2
+      - name: nginx container deploy
         run: |
           ssh ec2 'bash -s' <<EOF
           export APP_CERT="${{ secrets.APP_CERT }}"
@@ -48,6 +48,11 @@ jobs:
           export APP_DEV_CERT="${{ secrets.APP_DEV_CERT }}"
           export APP_DEV_KEY="${{ secrets.APP_DEV_KEY }}"
           bash ${REPO_NAME}/Nginx/deploy.sh ~/${REPO_NAME}
+
+      - name: prometheus  container deploy
+        run: |
+          ssh ec2 'bash -s' <<EOF
+          bash ${REPO_NAME}/Prometheus/deploy.sh
           
 
       
