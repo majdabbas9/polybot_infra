@@ -8,7 +8,7 @@ REPO_NAME=$1
 echo "🚀 Starting Prometheus container..."
 ENV_FILE="./.env"
 cat > "$ENV_FILE" <<EOF
-PROMETHEUS_CONFIG=~/$REPO_NAME/Prometheus/prometheus.yml
+PROMETHEUS_CONFIG=$HOME/$REPO_NAME/Prometheus/prometheus.yml
 EOF
 
 sudo docker compose -f docker-compose.prometheus.yaml down
