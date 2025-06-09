@@ -8,5 +8,5 @@ services:
     ports:
       - "443:443"
     volumes:
-      - $NGINX_CONF_DST:/etc/nginx/conf.d
-      - $CERTS_DIR:/etc/nginx/ssl
+      - ${NGINX_CONF_DST}/default.conf:/etc/nginx/conf.d
+      - ${CERTS_DIR}:/etc/nginx/ssl

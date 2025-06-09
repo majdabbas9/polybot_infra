@@ -3,8 +3,8 @@ set -e
 
 REPO_DIR=$1
 NGINX_CONF_SRC="$REPO_DIR/Nginx/default.conf"
-export NGINX_CONF_DST="$HOME/conf.d"
-export CERTS_DIR="$HOME/certs"
+NGINX_CONF_DST="$HOME/conf.d"
+CERTS_DIR="$HOME/certs"
 
 echo "📁 Preparing Nginx configuration and certs..."
 
@@ -22,6 +22,12 @@ printf "%s" "$APP_DEV_KEY" > "$CERTS_DIR/poly-dev.key"
 cp "$NGINX_CONF_SRC" "$NGINX_CONF_DST/default.conf"
 
 echo "🚢 Deploying Nginx container..."
+
+ENV_FILE="./.env"
+cat > "$ENV_FILE" <<EOF
+NGINX_CONF_DST=$NGINX_CONF_DST
+CERTS_DIR=$CERTS_DIR
+EOF
 
 sudo docker compose -f docker-compose.nginx.yaml down
 sudo docker compose -f docker-compose.nginx.yaml up -d
