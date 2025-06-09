@@ -3,8 +3,6 @@
 # Define variables
 REPO_NAME=$1
 
-# Pull Prometheus image
-## Run Prometheus container with mounted config
 echo "🚀 Starting Prometheus container..."
 ENV_FILE="./.env"
 cat > "$ENV_FILE" <<EOF
