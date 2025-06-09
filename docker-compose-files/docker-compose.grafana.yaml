@@ -3,7 +3,7 @@ networks:
     driver: bridge
 
 services:
-  prometheus:
+  grafana:
     image: grafana/grafana
     container_name: mygrafana
     restart: unless-stopped
