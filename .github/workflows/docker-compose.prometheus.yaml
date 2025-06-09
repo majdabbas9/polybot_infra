@@ -10,7 +10,5 @@ services:
     restart: unless-stopped
     ports:
       - "9090:9090"
-    networks:
-      - monitoring_net
     volumes:
       - ${PROMETHEUS_CONFIG}:/etc/prometheus/prometheus.yml
