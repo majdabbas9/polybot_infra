@@ -1,7 +1,4 @@
 version: '3.8'
-#networks:
-#  monitoring_net:
-#    driver: bridge
 
 services:
   prometheus:
