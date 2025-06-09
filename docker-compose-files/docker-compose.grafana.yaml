@@ -1,0 +1,15 @@
+
+version: '3.8'
+networks:
+  monitoring_net:
+    driver: bridge
+
+services:
+  prometheus:
+    image: grafana/grafana
+    container_name: mygrafana
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring_net

@@ -46,7 +46,7 @@ jobs:
 
       - name: nginx container deploy
         run: |
-          scp docker-compose.nginx.yaml ec2:/home/${{ secrets.EC2_USERNAME }}
+          scp docker-compose-files/docker-compose.nginx.yaml ec2:/home/${{ secrets.EC2_USERNAME }}
           ssh ec2 'bash -s' <<EOF
           export APP_CERT="${{ secrets.APP_CERT }}"
           export APP_KEY="${{ secrets.APP_KEY }}"
@@ -56,9 +56,10 @@ jobs:
           
       - name: Prometheus  container deploy
         run: |
-          scp docker-compose.prometheus.yaml ec2:/home/${{ secrets.EC2_USERNAME }}
+          scp docker-compose-files/docker-compose.prometheus.yaml ec2:/home/${{ secrets.EC2_USERNAME }}
           ssh ec2 "bash ${REPO_NAME}/Prometheus/deploy.sh ${REPO_NAME}"
 
       - name: Grafana  container deploy
         run: |
+          scp docker-compose-files/docker-compose.grafana.yaml ec2:/home/${{ secrets.EC2_USERNAME }}
           ssh ec2 "bash ${REPO_NAME}/Grafana/deploy.sh ${REPO_NAME}"
