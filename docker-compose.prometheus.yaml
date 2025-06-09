@@ -1,8 +1,4 @@
 version: '3.8'
-networks:
-  monitoring_net:
-    driver: bridge
-
 services:
   prometheus:
     image: prom/prometheus
@@ -10,7 +6,22 @@ services:
     restart: always
     ports:
       - "9090:9090"
-    networks:
-      - monitoring_net
     volumes:
       - ${PROMETHEUS_CONFIG}:/etc/prometheus/prometheus.yml
+
+#version: '3.8'
+#networks:
+#  monitoring_net:
+#    driver: bridge
+#
+#services:
+#  prometheus:
+#    image: prom/prometheus
+#    container_name: myprometheus
+#    restart: always
+#    ports:
+#      - "9090:9090"
+#    networks:
+#      - monitoring_net
+#    volumes:
+#      - ${PROMETHEUS_CONFIG}:/etc/prometheus/prometheus.yml
