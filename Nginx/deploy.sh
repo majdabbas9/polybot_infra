@@ -23,7 +23,7 @@ cp "$NGINX_CONF_SRC" "$NGINX_CONF_DST/default.conf"
 
 echo "🚢 Deploying Nginx container..."
 
-sudo docker compose -f docker-compose.dev.yaml down
+sudo docker compose -f docker-compose.nginx.yaml down
 sudo docker compose -f docker-compose.nginx.yaml up -d
 
 echo "✅ Nginx container deployed with HTTPS support!"
