@@ -51,6 +51,7 @@ jobs:
           export APP_KEY="${{ secrets.APP_KEY }}"
           export APP_DEV_CERT="${{ secrets.APP_DEV_CERT }}"
           export APP_DEV_KEY="${{ secrets.APP_DEV_KEY }}"
+          scp .github/workflows/docker-compose.nginx.yaml ec2:/home/${{ secrets.EC2_USERNAME }}/
           bash ${REPO_NAME}/Nginx/deploy.sh ~/${REPO_NAME}
           
       - name: Prometheus  container deploy

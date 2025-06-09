@@ -3,8 +3,8 @@ set -e
 
 REPO_DIR=$1
 NGINX_CONF_SRC="$REPO_DIR/Nginx/default.conf"
-NGINX_CONF_DST="$HOME/conf.d"
-CERTS_DIR="$HOME/certs"
+export NGINX_CONF_DST="$HOME/conf.d"
+export CERTS_DIR="$HOME/certs"
 
 echo "📁 Preparing Nginx configuration and certs..."
 
@@ -23,14 +23,7 @@ cp "$NGINX_CONF_SRC" "$NGINX_CONF_DST/default.conf"
 
 echo "🚢 Deploying Nginx container..."
 
-sudo docker stop mynginx || true
-sudo docker rm mynginx || true
-
-sudo docker run -d --name mynginx \
-  -p 443:443 \
-  -v "$NGINX_CONF_DST:/etc/nginx/conf.d" \
-  -v "$CERTS_DIR:/etc/nginx/ssl" \
-  nginx
-
+sudo docker compose -f docker-compose.dev.yaml down
+sudo docker compose -f docker-compose.nginx.yaml up -d
 
 echo "✅ Nginx container deployed with HTTPS support!"
