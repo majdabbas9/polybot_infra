@@ -10,8 +10,8 @@ CERTS_DIR="$WORKing_DIR/Nginx/certs"
 echo "📁 Preparing Nginx configuration and certs..."
 
 # Create config and certs directories
-mkdir -p "$WORKing_DIR/$NGINX_CONF_DST"
-mkdir -p "$WORKing_DIR/$CERTS_DIR"
+mkdir -p "$NGINX_CONF_DST"
+mkdir -p "$CERTS_DIR"
 
 echo "📥 Writing certs to $CERTS_DIR"
 printf "%s" "$APP_CERT" > "$CERTS_DIR/poly-prod.crt"
