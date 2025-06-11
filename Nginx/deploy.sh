@@ -19,7 +19,7 @@ printf "%s" "$APP_DEV_KEY" > "$CERTS_DIR/poly-dev.key"
 
 echo "🚢 Deploying Nginx container..."
 
-ENV_FILE="$HOME/Nginx/.env"
+ENV_FILE="$HOME/docker-compose-files/.env"
 cat > "$ENV_FILE" <<EOF
 NGINX_CONF_DST=$NGINX_CONF_DST
 CERTS_DIR=$CERTS_DIR
