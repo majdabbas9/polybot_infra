@@ -17,12 +17,9 @@ printf "%s" "$APP_KEY" > "$CERTS_DIR/poly-prod.key"
 printf "%s" "$APP_DEV_CERT" > "$CERTS_DIR/poly-dev.crt"
 printf "%s" "$APP_DEV_KEY" > "$CERTS_DIR/poly-dev.key"
 
-# Copy Nginx config
-cp "$NGINX_CONF_SRC" "$NGINX_CONF_DST/default.conf"
-
 echo "🚢 Deploying Nginx container..."
 
-ENV_FILE="./.env"
+ENV_FILE="$HOME/Nginx/.env"
 cat > "$ENV_FILE" <<EOF
 NGINX_CONF_DST=$NGINX_CONF_DST
 CERTS_DIR=$CERTS_DIR

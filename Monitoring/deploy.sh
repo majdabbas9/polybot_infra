@@ -3,7 +3,7 @@
 # Define variables
 
 echo "🚀 Starting Monitoring containers..."
-ENV_FILE="./.env"
+ENV_FILE="$HOME/Monitoring/.env"
 cat > "$ENV_FILE" <<EOF
 PROMETHEUS_CONFIG=$HOME/Prometheus/prometheus.yml
 EOF
