@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-REPO_DIR=$1
-NGINX_CONF_SRC="$REPO_DIR/Nginx/default.conf"
+NGINX_CONF_SRC="$HOME/Nginx/default.conf"
 NGINX_CONF_DST="$HOME/conf.d"
 CERTS_DIR="$HOME/certs"
 

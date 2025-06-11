@@ -3,6 +3,14 @@ networks:
     driver: bridge
 
 services:
+  grafana:
+    image: grafana/grafana
+    container_name: mygrafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring_net
   prometheus:
     image: prom/prometheus
     container_name: myprometheus
@@ -13,3 +21,5 @@ services:
       - monitoring_net
     volumes:
       - ${PROMETHEUS_CONFIG}:/etc/prometheus/prometheus.yml
+
+
