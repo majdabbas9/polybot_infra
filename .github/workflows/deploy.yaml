@@ -42,6 +42,7 @@ jobs:
       - name: nginx container deploy
         run: |
           scp -r Nginx ec2:/home/${{ secrets.EC2_USERNAME }}/
+          sleep 2
           cd /home/${{ secrets.EC2_USERNAME }}/Nginx/
           pwd
           ssh ec2 'bash -s' <<EOF
