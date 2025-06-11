@@ -54,4 +54,4 @@ jobs:
       - name: Monitoring containers deploy
         run: |
           scp -r Monitoring ec2:/home/${{ secrets.EC2_USERNAME }}/
-          ssh ec2 "bash /home/${{ secrets.EC2_USERNAME }}/Monitoring/deploy.sh"
+          ssh ec2 "cd /home/${{ secrets.EC2_USERNAME }}/Monitoring/ && bash /home/${{ secrets.EC2_USERNAME }}/Monitoring/deploy.sh"
