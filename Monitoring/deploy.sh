@@ -4,7 +4,7 @@
 WORKing_DIR="$HOME/Monitoring"
 
 echo "🚀 Starting Monitoring containers..."
-ENV_FILE="$WORKing_DIR/docker-compose-files/.env"
+ENV_FILE="$WORKing_DIR/.env"
 cat > "$ENV_FILE" <<EOF
 PROMETHEUS_CONFIG=$WORKing_DIR/prometheus.yml
 EOF
