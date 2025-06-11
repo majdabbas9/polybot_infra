@@ -38,11 +38,11 @@ jobs:
           # download docker and copy docker compose files to EC2
           scp docker_download.sh ec2:/home/${{ secrets.EC2_USERNAME }}/
           ssh ec2 "bash /home/${{ secrets.EC2_USERNAME }}/docker_download.sh"
-          scp -r docker-compose-files ec2:/home/${{ secrets.EC2_USERNAME }}/
 
       - name: nginx container deploy
         run: |
           scp -r Nginx ec2:/home/${{ secrets.EC2_USERNAME }}/
+          scp docker-compose-files/docker-compose.nginx.yaml ec2:/home/${{ secrets.EC2_USERNAME }}/Nginx/
           ssh ec2 'bash -s' <<EOF
           export APP_CERT="${{ secrets.APP_CERT }}"
           export APP_KEY="${{ secrets.APP_KEY }}"
@@ -53,4 +53,5 @@ jobs:
       - name: Monitoring containers deploy
         run: |
           scp -r Monitoring ec2:/home/${{ secrets.EC2_USERNAME }}/
+          scp docker-compose-files/docker-compose.monitoring.yaml ec2:/home/${{ secrets.EC2_USERNAME }}/Monitoring/
           ssh ec2 "bash /home/${{ secrets.EC2_USERNAME }}/Monitoring/deploy.sh"
