@@ -28,7 +28,7 @@ NGINX_CONF_DST=$NGINX_CONF_DST
 CERTS_DIR=$CERTS_DIR
 EOF
 
-sudo docker compose -f docker-compose.nginx.yaml down
-sudo docker compose -f docker-compose.nginx.yaml up -d
+sudo docker compose -f docker-compose-files/docker-compose.nginx.yaml down
+sudo docker compose -f docker-compose-files/docker-compose.nginx.yaml up -d
 
 echo "✅ Nginx container deployed with HTTPS support!"
