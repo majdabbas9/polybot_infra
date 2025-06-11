@@ -16,7 +16,6 @@ printf "%s" "$APP_CERT" > "$CERTS_DIR/poly-prod.crt"
 printf "%s" "$APP_KEY" > "$CERTS_DIR/poly-prod.key"
 printf "%s" "$APP_DEV_CERT" > "$CERTS_DIR/poly-dev.crt"
 printf "%s" "$APP_DEV_KEY" > "$CERTS_DIR/poly-dev.key"
-
 echo "🚢 Deploying Nginx container..."
 
 ENV_FILE="$HOME/docker-compose-files/.env"
