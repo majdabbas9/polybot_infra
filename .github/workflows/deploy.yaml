@@ -42,7 +42,8 @@ jobs:
       - name: nginx container deploy
         run: |
           scp -r Nginx ec2:/home/${{ secrets.EC2_USERNAME }}/
-          cd /home/${{ secrets.EC2_USERNAME }}/Nginx
+          cd /home/${{ secrets.EC2_USERNAME }}/Nginx/
+          pwd
           ssh ec2 'bash -s' <<EOF
           export APP_CERT="${{ secrets.APP_CERT }}"
           export APP_KEY="${{ secrets.APP_KEY }}"
