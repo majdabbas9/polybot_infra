@@ -4,13 +4,11 @@ set -e
 WORKing_DIR="$HOME/Nginx"
 
 NGINX_CONF_SRC="$WORKing_DIR/default.conf"
-NGINX_CONF_DST="$WORKing_DIR/conf.d"
-CERTS_DIR="$WORKing_DIR/Nginx/certs"
+CERTS_DIR="$WORKing_DIR/certs"
 
 echo "📁 Preparing Nginx configuration and certs..."
 
 # Create config and certs directories
-mkdir -p "$NGINX_CONF_DST"
 mkdir -p "$CERTS_DIR"
 
 echo "📥 Writing certs to $CERTS_DIR"
@@ -22,7 +20,7 @@ echo "🚢 Deploying Nginx container..."
 
 ENV_FILE="$WORKing_DIR/.env"
 cat > "$ENV_FILE" <<EOF
-NGINX_CONF_DST=$NGINX_CONF_DST
+NGINX_CONF_DST=$NGINX_CONF_SRC
 CERTS_DIR=$CERTS_DIR
 EOF
 
