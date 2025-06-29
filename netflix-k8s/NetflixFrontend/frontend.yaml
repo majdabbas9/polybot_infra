@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netflix-frontend
+  labels:
+    app: netflix-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netflix-frontend
+  template:
+    metadata:
+      labels:
+        app: netflix-frontend
+    spec:
+      containers:
+      - name: netflixfrontend
+        image: majdabbas99/netflifrontend
+        env:
+          - name: MOVIE_CATALOG_SERVICE
+            value: http://service-netflix-movie-cat:8080
+          - name: REDIS_URL
+            value: service-my-redis:6379

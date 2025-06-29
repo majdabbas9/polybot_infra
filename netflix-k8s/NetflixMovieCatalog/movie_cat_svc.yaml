@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-netflix-movie-cat
+spec:
+  selector:
+    app: netflix-movie-cat
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
