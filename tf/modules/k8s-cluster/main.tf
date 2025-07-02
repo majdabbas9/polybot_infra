@@ -1,7 +1,8 @@
+
 # This module creates the necessary AWS resources for a Kubernetes cluster
 # including DynamoDB tables and an S3 bucket.
-resource "aws_dynamodb_table" "prediction_session" {
-  name           = "${var.username}_${var.env}_prediction_session"
+resource "aws_dynamodb_table" "prediction_session_dev" {
+  name           = "${var.username}_dev_prediction_session"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "uid"
   attribute {
@@ -9,14 +10,27 @@ resource "aws_dynamodb_table" "prediction_session" {
     type = "S"
   }
   tags = {
-    Environment = var.env
+    Environment ="dev"
+    Owner       = var.username
+  }
+}
+resource "aws_dynamodb_table" "prediction_session_prod" {
+  name           = "${var.username}_prod_prediction_session"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "uid"
+  attribute {
+    name = "uid"
+    type = "S"
+  }
+  tags = {
+    Environment = "prod"
     Owner       = var.username
   }
 }
 
 # This DynamoDB table stores detection objects with various attributes and indices.
-resource "aws_dynamodb_table" "detection_objects" {
-  name           = "${var.username}_${var.env}_detection_objects"
+resource "aws_dynamodb_table" "detection_objects_dev" {
+  name           = "${var.username}_dev_detection_objects"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "prediction_uid"
   range_key      = "score"
@@ -57,30 +71,88 @@ resource "aws_dynamodb_table" "detection_objects" {
     projection_type    = "ALL"
   }
   tags = {
-    Environment = var.env
+    Environment = "dev"
     Owner       = var.username
   }
 }
+resource "aws_dynamodb_table" "detection_objects_prod" {
+  name           = "${var.username}_prod_detection_objects"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "prediction_uid"
+  range_key      = "score"
+  attribute {
+    name = "prediction_uid"
+    type = "S"
+  }
+  attribute {
+    name = "score"
+    type = "S"
+  }
+  attribute {
+    name = "label"
+    type = "S"
+  }
 
+  attribute {
+    name = "label_score"
+    type = "N"
+  }
+
+  attribute {
+    name = "score_partition"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name               = "label-index"
+    hash_key           = "label"
+    range_key          = "label_score"
+    projection_type    = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "score_partition-score-index"
+    hash_key           = "score_partition"
+    range_key          = "label_score"
+    projection_type    = "ALL"
+  }
+  tags = {
+    Environment = "prod"
+    Owner       = var.username
+  }
+}
 # This S3 bucket is used to store data related to the Kubernetes cluster.
-resource "aws_s3_bucket" "bucket" {
-  bucket         = "${var.username}-${var.env}-polybot-bucket"
+resource "aws_s3_bucket" "bucket_dev" {
+  bucket         = "${var.username}-dev-polybot-bucket"
   force_destroy  = true
   tags = {
-    Environment = var.env
+    Environment = "dev"
     Owner       = var.username
   }
 }
-
-# This SQS queue is used for message queuing in the Kubernetes cluster.
-resource "aws_sqs_queue" "sqs" {
-  name = "${var.username}_${var.env}_sqs"
+resource "aws_s3_bucket" "bucket_prod" {
+  bucket         = "${var.username}-prod-polybot-bucket"
+  force_destroy  = true
   tags = {
-    Environment = var.env
+    Environment = "prod"
     Owner       = var.username
   }
 }
-
+# This SQS queue is used for message queuing in the Kubernetes cluster.
+resource "aws_sqs_queue" "sqs_dev" {
+  name = "${var.username}_dev_sqs"
+  tags = {
+    Environment = "dev"
+    Owner       = var.username
+  }
+}
+resource "aws_sqs_queue" "sqs_prod" {
+  name = "${var.username}_prod_sqs"
+  tags = {
+    Environment = "prod"
+    Owner       = var.username
+  }
+}
 module "polybot_service_vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
@@ -95,10 +167,8 @@ module "polybot_service_vpc" {
 
   tags = {
     Name = "${var.username}-polybot-vpc"
-    Env  = var.env
   }
 }
-
 resource "aws_security_group" "cp" {
   name        = "cp-sg"
   description = "Control plane security group"
@@ -141,7 +211,6 @@ resource "aws_security_group" "cp" {
 
   tags = {
     Name = "cp-sg"
-    Env  = var.env
   }
 }
 
@@ -184,13 +253,11 @@ resource "aws_security_group" "node" {
 
   tags = {
     Name = "node-sg"
-    Env  = var.env
   }
 }
 
 resource "aws_iam_role" "polybot_role" {
   name = "${var.username}_polybot_role"
-
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -206,7 +273,6 @@ resource "aws_iam_role" "polybot_role" {
 resource "aws_iam_policy" "polybot_policy" {
   name        = "${var.username}_polybot_policy"
   description = "Policy for access to DynamoDB, S3, and SQS"
-
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -253,7 +319,7 @@ resource "aws_iam_role_policy_attachment" "attach_policy" {
 
 # This IAM instance profile allows EC2 instances to assume the role.
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${var.username}_${var.env}_ec2_profile"
+  name = "${var.username}_ec2_profile"
   role = aws_iam_role.polybot_role.name
 }
 
@@ -266,7 +332,6 @@ resource "aws_instance" "k8s_cp" {
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
-  # count = var.env ? "dev" : 0
   user_data = <<-EOF
                 #!/bin/bash
                 KUBERNETES_VERSION=v1.32
@@ -302,8 +367,7 @@ resource "aws_instance" "k8s_cp" {
                 EOF
 
   tags = {
-    Name = "${var.username}-${var.env}-k8s-cp"
-    Env  = var.env
+    Name = "${var.username}-k8s-cp"
   }
 }
 
@@ -389,4 +453,200 @@ resource "aws_autoscaling_group" "worker_asg" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+#--------------------------------------------------------- Join use (Lambda + Lifecycle Hook + SNS + SSM)-----------------------------------
+resource "aws_sns_topic" "asg_notifications" {
+  name = "Majd-worker-asg-lifecycle"
+}
+
+resource "aws_iam_role" "asg_lifecycle_role" {
+  name = "Majd-asg-lifecycle-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action    = "sts:AssumeRole",
+      Principal = { Service = "autoscaling.amazonaws.com" },
+      Effect    = "Allow"
+    }]
+  })
+}
+resource "aws_autoscaling_lifecycle_hook" "worker_join_hook" {
+  name                   = "Majd-worker-join-hook"
+  autoscaling_group_name = aws_autoscaling_group.worker_asg.name
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
+  default_result         = "CONTINUE"
+  heartbeat_timeout      = 600
+  notification_target_arn = aws_sns_topic.asg_notifications.arn
+  role_arn               = aws_iam_role.asg_lifecycle_role.arn
+}
+resource "aws_iam_role_policy" "asg_sns" {
+  role = aws_iam_role.asg_lifecycle_role.name
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = "sns:Publish",
+      Resource = aws_sns_topic.asg_notifications.arn
+    }]
+  })
+}
+
+resource "aws_iam_role" "lambda_exec_role" {
+  name = "jabaren-lambda-worker-join"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "lambda.amazonaws.com" },
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "lambda_policy" {
+  role = aws_iam_role.lambda_exec_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:DescribeInstanceInformation",
+          "ssm:GetCommandInvocation",
+          "ssm:SendCommand",
+          "ssm:ListCommands",
+          "ssm:UpdateInstanceInformation",
+          "ssmmessages:*",
+          "ec2messages:*"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ec2:DescribeInstances"  # 🔑 REQUIRED for control-plane lookup
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "autoscaling:CompleteLifecycleAction"  # 🔄 REQUIRED to end lifecycle
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "worker_join_lambda" {
+  filename         = "lambda_payload.zip"
+  function_name    = "worker-auto-join"
+  role             = aws_iam_role.lambda_exec_role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = "python3.12"
+  timeout          = 60
+  environment {
+    variables = {
+      REGION = var.region
+    }
+  }
+}
+resource "aws_lambda_permission" "sns_invoke" {
+  statement_id  = "AllowSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.worker_join_lambda.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.asg_notifications.arn
+}
+
+resource "aws_sns_topic_subscription" "sub" {
+  topic_arn = aws_sns_topic.asg_notifications.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.worker_join_lambda.arn
+}
+
+resource "aws_iam_policy" "ssm_logs_policy" {
+  name = "Jabaren_ssm_logs_policy"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:DescribeInstanceInformation",
+          "ssm:GetCommandInvocation",
+          "ssm:SendCommand",
+          "ssm:ListCommands"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_ssm_logs" {
+  role       = aws_iam_role.polybot_role.name
+  policy_arn = aws_iam_policy.ssm_logs_policy.arn
+}
+resource "aws_iam_policy" "ssm_instance_policy" {
+  name        = "Jabaren_ssm_instance_policy"
+  description = "Allow EC2 instances to work with SSM"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:DescribeAssociation",
+          "ssm:GetDeployablePatchSnapshotForInstance",
+          "ssm:GetDocument",
+          "ssm:DescribeDocument",
+          "ssm:GetManifest",
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:ListAssociations",
+          "ssm:ListInstanceAssociations",
+          "ssm:PutInventory",
+          "ssm:PutComplianceItems",
+          "ssm:PutConfigurePackageResult",
+          "ssm:UpdateAssociationStatus",
+          "ssm:UpdateInstanceAssociationStatus",
+          "ssm:UpdateInstanceInformation",
+          "ssmmessages:*",
+          "ec2messages:*",
+          "cloudwatch:PutMetricData",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+resource "aws_iam_role_policy_attachment" "attach_ssm_instance_policy" {
+  role       = aws_iam_role.polybot_role.name
+  policy_arn = aws_iam_policy.ssm_instance_policy.arn
 }
