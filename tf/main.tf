@@ -18,7 +18,8 @@ provider "aws" {
   region  = var.region
   profile = "default"  # change in case you want to work with another AWS account profile
 }
-
+# if infra == true then build the infrastructure
+# else build the sqs dynamo s3
 module "k8s-cluster" {
   source = "./modules/k8s-cluster"
   env    = var.env
@@ -27,3 +28,4 @@ module "k8s-cluster" {
   ami = var.ami
   key_pair_name = var.key_pair_name
 }
+

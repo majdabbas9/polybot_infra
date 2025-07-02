@@ -8,6 +8,10 @@ resource "aws_dynamodb_table" "prediction_session" {
     name = "uid"
     type = "S"
   }
+  tags = {
+    Environment = var.env
+    Owner       = var.username
+  }
 }
 
 # This DynamoDB table stores detection objects with various attributes and indices.
@@ -52,17 +56,29 @@ resource "aws_dynamodb_table" "detection_objects" {
     range_key          = "label_score"
     projection_type    = "ALL"
   }
+  tags = {
+    Environment = var.env
+    Owner       = var.username
+  }
 }
 
 # This S3 bucket is used to store data related to the Kubernetes cluster.
 resource "aws_s3_bucket" "bucket" {
   bucket         = "${var.username}-${var.env}-polybot-bucket"
   force_destroy  = true
+  tags = {
+    Environment = var.env
+    Owner       = var.username
+  }
 }
 
 # This SQS queue is used for message queuing in the Kubernetes cluster.
 resource "aws_sqs_queue" "sqs" {
   name = "${var.username}_${var.env}_sqs"
+  tags = {
+    Environment = var.env
+    Owner       = var.username
+  }
 }
 
 module "polybot_service_vpc" {
@@ -173,7 +189,7 @@ resource "aws_security_group" "node" {
 }
 
 resource "aws_iam_role" "polybot_role" {
-  name = "${var.username}_${var.env}_polybot_role"
+  name = "${var.username}_polybot_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -185,14 +201,10 @@ resource "aws_iam_role" "polybot_role" {
       Action = "sts:AssumeRole"
     }]
   })
-
-  tags = {
-    Env = var.env
-  }
 }
 
 resource "aws_iam_policy" "polybot_policy" {
-  name        = "${var.username}_${var.env}_polybot_policy"
+  name        = "${var.username}_polybot_policy"
   description = "Policy for access to DynamoDB, S3, and SQS"
 
   policy = jsonencode({
@@ -207,11 +219,7 @@ resource "aws_iam_policy" "polybot_policy" {
           "dynamodb:GetItem",
           "dynamodb:Query"
         ]
-        Resource = [
-          aws_dynamodb_table.prediction_session.arn,
-          aws_dynamodb_table.detection_objects.arn,
-          "${aws_dynamodb_table.detection_objects.arn}/index/*"
-        ]
+        Resource = "*"
       },
       {
         Sid    = "S3Access"
@@ -221,7 +229,7 @@ resource "aws_iam_policy" "polybot_policy" {
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource = "${aws_s3_bucket.bucket.arn}/*"
+        Resource = "*"
       },
       {
         Sid    = "SQSAccess"
@@ -231,7 +239,7 @@ resource "aws_iam_policy" "polybot_policy" {
           "sqs:ReceiveMessage",
           "sqs:DeleteMessage"
         ]
-        Resource = aws_sqs_queue.sqs.arn
+        Resource = "*"
       }
     ]
   })
@@ -258,7 +266,40 @@ resource "aws_instance" "k8s_cp" {
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
-  user_data = file("./modules/k8s-cluster/setup-k8s-cp.sh")
+  # count = var.env ? "dev" : 0
+  user_data = <<-EOF
+                #!/bin/bash
+                KUBERNETES_VERSION=v1.32
+
+                apt-get update
+                apt-get install -y jq unzip ebtables ethtool
+
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip awscliv2.zip
+                sudo ./aws/install
+
+                echo 'net.ipv4.ip_forward = 1' > /etc/sysctl.d/k8s.conf
+                sysctl --system
+
+                mkdir -p /etc/apt/keyrings
+                curl -fsSL https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+                echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
+
+                curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+                echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" > /etc/apt/sources.list.d/cri-o.list
+
+                apt-get update
+                apt-get install -y software-properties-common apt-transport-https ca-certificates curl gpg
+                apt-get install -y cri-o kubelet kubeadm kubectl
+                apt-mark hold kubelet kubeadm kubectl
+
+                systemctl start crio.service
+                systemctl enable --now crio.service
+                systemctl enable --now kubelet
+
+                swapoff -a
+                (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
+                EOF
 
   tags = {
     Name = "${var.username}-${var.env}-k8s-cp"
@@ -266,4 +307,86 @@ resource "aws_instance" "k8s_cp" {
   }
 }
 
+# This launch template is used to create worker nodes in the Kubernetes cluster.
+resource "aws_launch_template" "worker_lt" {
+  name_prefix   = "${var.username}_worker_lt"
+  image_id      = var.ami
+  instance_type = "t2.medium"
 
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_profile.name
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.node.id]
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${var.username}_worker"
+    }
+  }
+
+  user_data = base64encode(<<-EOF
+                #!/bin/bash
+                KUBERNETES_VERSION=v1.32
+
+                apt-get update
+                apt-get install -y jq unzip ebtables ethtool
+
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip awscliv2.zip
+                sudo ./aws/install
+
+                echo 'net.ipv4.ip_forward = 1' > /etc/sysctl.d/k8s.conf
+                sysctl --system
+
+                mkdir -p /etc/apt/keyrings
+                curl -fsSL https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+                echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
+
+                curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+                echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" > /etc/apt/sources.list.d/cri-o.list
+
+                apt-get update
+                apt-get install -y software-properties-common apt-transport-https ca-certificates curl gpg
+                apt-get install -y cri-o kubelet kubeadm kubectl
+                apt-mark hold kubelet kubeadm kubectl
+
+                systemctl start crio.service
+                systemctl enable --now crio.service
+                systemctl enable --now kubelet
+
+                swapoff -a
+                (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
+EOF
+)
+}
+
+# This Auto Scaling Group (ASG) manages the worker nodes in the Kubernetes cluster.
+resource "aws_autoscaling_group" "worker_asg" {
+  name                      = "${var.username}_worker_asg"
+  desired_capacity          = 1
+  max_size                  = 1
+  min_size                  = 1
+  vpc_zone_identifier       = module.polybot_service_vpc.public_subnets
+  health_check_type         = "EC2"
+  health_check_grace_period = 300
+
+  launch_template {
+    id      = aws_launch_template.worker_lt.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "${var.username}_worker"
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
