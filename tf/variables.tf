@@ -1,10 +1,6 @@
-variable "env" {
-   description = "Deployment environment"
-   type        = string
-}
 variable "region" {
-   description = "AWS region"
-   type        = string
+  description = "AWS region"
+  type        = string
 }
 variable "username" {
     description = "Username for the EC2 instance"

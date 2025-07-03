@@ -22,10 +22,10 @@ provider "aws" {
 # else build the sqs dynamo s3
 module "k8s-cluster" {
   source = "./modules/k8s-cluster"
-  env    = var.env
   username = var.username
   azs    = var.azs
   ami = var.ami
+  region = var.region
   key_pair_name = var.key_pair_name
 }
 

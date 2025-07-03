@@ -1,0 +1,32 @@
+name: Provision Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tf
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Setup AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-west-1
+          AWSAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWSSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Terraform Init & Apply
+        run: |
+          terraform init
+          terraform apply -var-file=region.eu-west-1.tfvars --auto-approve

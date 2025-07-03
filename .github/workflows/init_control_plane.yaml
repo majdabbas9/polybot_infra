@@ -1,0 +1,44 @@
+name: Init Control Plane
+
+on:
+  workflow_run:
+    workflows: ["Provision Infrastructure"]
+    types:
+      - completed
+
+jobs:
+  init_control_plane:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Terraform Init and Output IP
+        working-directory: tf
+        run: |
+          terraform init
+          terraform output -raw control_plane_public_ip > ip.txt
+
+      - name: Save EC2 SSH key
+        working-directory: tf
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Copy and Run Init Script on Control Plane
+        working-directory: tf
+        run: |
+          chmod +x cp_init.sh
+          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
