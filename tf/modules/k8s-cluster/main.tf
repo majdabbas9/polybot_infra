@@ -332,39 +332,7 @@ resource "aws_instance" "k8s_cp" {
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
-  user_data = <<-EOF
-                #!/bin/bash
-                KUBERNETES_VERSION=v1.32
-
-                apt-get update
-                apt-get install -y jq unzip ebtables ethtool
-
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                unzip awscliv2.zip
-                sudo ./aws/install
-
-                echo 'net.ipv4.ip_forward = 1' > /etc/sysctl.d/k8s.conf
-                sysctl --system
-
-                mkdir -p /etc/apt/keyrings
-                curl -fsSL https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-                echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
-
-                curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
-                echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" > /etc/apt/sources.list.d/cri-o.list
-
-                apt-get update
-                apt-get install -y software-properties-common apt-transport-https ca-certificates curl gpg
-                apt-get install -y cri-o kubelet kubeadm kubectl
-                apt-mark hold kubelet kubeadm kubectl
-
-                systemctl start crio.service
-                systemctl enable --now crio.service
-                systemctl enable --now kubelet
-
-                swapoff -a
-                (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
-                EOF
+  user_data                   = base64encode(file("${path.module}/init_k8s_cp.sh"))
 
   tags = {
     Name = "${var.username}-k8s-cp"
@@ -393,40 +361,10 @@ resource "aws_launch_template" "worker_lt" {
     }
   }
 
-  user_data = base64encode(<<-EOF
-                #!/bin/bash
-                KUBERNETES_VERSION=v1.32
-
-                apt-get update
-                apt-get install -y jq unzip ebtables ethtool
-
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                unzip awscliv2.zip
-                sudo ./aws/install
-
-                echo 'net.ipv4.ip_forward = 1' > /etc/sysctl.d/k8s.conf
-                sysctl --system
-
-                mkdir -p /etc/apt/keyrings
-                curl -fsSL https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-                echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$${KUBERNETES_VERSION}/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
-
-                curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
-                echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" > /etc/apt/sources.list.d/cri-o.list
-
-                apt-get update
-                apt-get install -y software-properties-common apt-transport-https ca-certificates curl gpg
-                apt-get install -y cri-o kubelet kubeadm kubectl
-                apt-mark hold kubelet kubeadm kubectl
-
-                systemctl start crio.service
-                systemctl enable --now crio.service
-                systemctl enable --now kubelet
-
-                swapoff -a
-                (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
-EOF
-)
+  user_data = base64encode(templatefile("init_k8s_worker.sh.tpl", {
+    region      = var.region,
+    secret_name = "kubeadm-join-command"
+  }))
 }
 
 # This Auto Scaling Group (ASG) manages the worker nodes in the Kubernetes cluster.
@@ -521,7 +459,9 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "ssm:ListCommands",
           "ssm:UpdateInstanceInformation",
           "ssmmessages:*",
-          "ec2messages:*"
+          "ec2messages:*",
+          "ssm:GetParameter",
+          "ssm:PutParameter"
         ],
         Resource = "*"
       },
