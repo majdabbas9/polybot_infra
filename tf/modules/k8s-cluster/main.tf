@@ -332,7 +332,7 @@ resource "aws_instance" "k8s_cp" {
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
-  user_data                   = base64encode(file("${path.module}/init_k8s_cp.sh"))
+  user_data                   = file("${path.module}/init_k8s_cp.sh")
 
   tags = {
     Name = "${var.username}-k8s-cp"
@@ -361,7 +361,7 @@ resource "aws_launch_template" "worker_lt" {
     }
   }
 
-  user_data = base64encode(templatefile("init_k8s_worker.sh.tpl", {
+  user_data = base64encode(templatefile("${path.module}/init_k8s_worker.sh.tpl", {
     region      = var.region,
     secret_name = "kubeadm-join-command"
   }))
