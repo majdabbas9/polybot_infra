@@ -306,6 +306,14 @@ resource "aws_iam_policy" "polybot_policy" {
           "sqs:DeleteMessage"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "SSMPutParameterAccess"
+        Effect = "Allow"
+        Action = [
+          "ssm:PutParameter"
+        ]
+        Resource = "*"
       }
     ]
   })
