@@ -579,6 +579,7 @@ resource "aws_iam_policy" "ssm_instance_policy" {
           "ssm:UpdateInstanceAssociationStatus",
           "ssm:UpdateInstanceInformation",
           "ssmmessages:*",
+          "ssm:PutParameter",
           "ec2messages:*",
           "cloudwatch:PutMetricData",
           "logs:CreateLogGroup",
