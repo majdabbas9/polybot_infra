@@ -17,7 +17,7 @@ if [ ! -f /etc/kubernetes/admin.conf ]; then
     --type "SecureString" \
     --value "$JOIN_CMD" \
     --overwrite \
-    --region us-west-2
+    --region eu-west-1
 
 else
   echo "Control plane already initialized, skipping kubeadm init."
