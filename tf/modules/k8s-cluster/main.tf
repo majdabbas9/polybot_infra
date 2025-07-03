@@ -457,11 +457,11 @@ resource "aws_autoscaling_group" "worker_asg" {
 
 #--------------------------------------------------------- Join use (Lambda + Lifecycle Hook + SNS + SSM)-----------------------------------
 resource "aws_sns_topic" "asg_notifications" {
-  name = "Majd-worker-asg-lifecycle"
+  name = "${var.username}-worker-asg-lifecycle"
 }
 
 resource "aws_iam_role" "asg_lifecycle_role" {
-  name = "Majd-asg-lifecycle-role"
+  name = "${var.username}-asg-lifecycle-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
@@ -471,8 +471,9 @@ resource "aws_iam_role" "asg_lifecycle_role" {
     }]
   })
 }
+
 resource "aws_autoscaling_lifecycle_hook" "worker_join_hook" {
-  name                   = "Majd-worker-join-hook"
+  name                   = "${var.username}-worker-join-hook"
   autoscaling_group_name = aws_autoscaling_group.worker_asg.name
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
   default_result         = "CONTINUE"
@@ -480,6 +481,7 @@ resource "aws_autoscaling_lifecycle_hook" "worker_join_hook" {
   notification_target_arn = aws_sns_topic.asg_notifications.arn
   role_arn               = aws_iam_role.asg_lifecycle_role.arn
 }
+
 resource "aws_iam_role_policy" "asg_sns" {
   role = aws_iam_role.asg_lifecycle_role.name
   policy = jsonencode({
@@ -493,7 +495,7 @@ resource "aws_iam_role_policy" "asg_sns" {
 }
 
 resource "aws_iam_role" "lambda_exec_role" {
-  name = "jabaren-lambda-worker-join"
+  name = "${var.username}-lambda-worker-join"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
@@ -563,6 +565,7 @@ resource "aws_lambda_function" "worker_join_lambda" {
     }
   }
 }
+
 resource "aws_lambda_permission" "sns_invoke" {
   statement_id  = "AllowSNS"
   action        = "lambda:InvokeFunction"
@@ -578,7 +581,7 @@ resource "aws_sns_topic_subscription" "sub" {
 }
 
 resource "aws_iam_policy" "ssm_logs_policy" {
-  name = "Jabaren_ssm_logs_policy"
+  name = "${var.username}_ssm_logs_policy"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -609,8 +612,9 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_logs" {
   role       = aws_iam_role.polybot_role.name
   policy_arn = aws_iam_policy.ssm_logs_policy.arn
 }
+
 resource "aws_iam_policy" "ssm_instance_policy" {
-  name        = "Jabaren_ssm_instance_policy"
+  name        = "${var.username}_ssm_instance_policy"
   description = "Allow EC2 instances to work with SSM"
 
   policy = jsonencode({
@@ -646,6 +650,7 @@ resource "aws_iam_policy" "ssm_instance_policy" {
     ]
   })
 }
+
 resource "aws_iam_role_policy_attachment" "attach_ssm_instance_policy" {
   role       = aws_iam_role.polybot_role.name
   policy_arn = aws_iam_policy.ssm_instance_policy.arn
