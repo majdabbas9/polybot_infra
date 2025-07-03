@@ -153,6 +153,7 @@ resource "aws_sqs_queue" "sqs_prod" {
     Owner       = var.username
   }
 }
+
 module "polybot_service_vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
@@ -169,6 +170,7 @@ module "polybot_service_vpc" {
     Name = "${var.username}-polybot-vpc"
   }
 }
+
 resource "aws_security_group" "cp" {
   name        = "cp-sg"
   description = "Control plane security group"
@@ -352,6 +354,7 @@ resource "aws_launch_template" "worker_lt" {
   name_prefix   = "${var.username}_worker_lt"
   image_id      = var.ami
   instance_type = "t2.medium"
+  key_name      = var.key_pair_name
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ec2_profile.name
