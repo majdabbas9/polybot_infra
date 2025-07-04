@@ -213,9 +213,9 @@ resource "aws_security_group" "node" {
 
 resource "aws_security_group_rule" "cp_allow_node_k8s_api" {
   type                     = "ingress"
-  from_port                = 6443
-  to_port                  = 6443
-  protocol                 = "tcp"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
   security_group_id        = aws_security_group.cp.id
   source_security_group_id = aws_security_group.node.id
   description              = "Allow K8s API server access from worker nodes"
