@@ -2,7 +2,7 @@ import boto3
 from datetime import datetime, timedelta
 
 REGION = "eu-west-1"
-SSM_PARAM = "/k8s/worker/join-command"
+SSM_PARAM = "/k8s/worker/join-command-majd"
 
 ssm = boto3.client("ssm", region_name=REGION)
 ec2 = boto3.client("ec2", region_name=REGION)

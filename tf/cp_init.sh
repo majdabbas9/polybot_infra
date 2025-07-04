@@ -13,7 +13,7 @@ if [ ! -f /etc/kubernetes/admin.conf ]; then
   # ✅ Generate and push the join command to SSM
   JOIN_CMD=$(kubeadm token create --print-join-command)
   aws ssm put-parameter \
-    --name "/k8s/worker/join-command" \
+    --name "/k8s/worker/join-command-majd" \
     --type "SecureString" \
     --value "$JOIN_CMD" \
     --overwrite \
