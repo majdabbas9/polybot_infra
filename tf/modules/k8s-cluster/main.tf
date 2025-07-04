@@ -194,13 +194,22 @@ resource "aws_security_group" "cp" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow kube-apiserver access from worker nodes (port 6443)
+  ingress {
+    description     = "Allow kube-apiserver (6443) from node SG"
+    from_port       = 6443
+    to_port         = 6443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.node.id]
+  }
+
   # Allow all traffic between instances in the same SG
   ingress {
-    description     = "Allow all from self"
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    self            = true
+    description = "Allow all from self"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
   }
 
   # Egress: allow all traffic out
@@ -221,7 +230,7 @@ resource "aws_security_group" "node" {
   description = "Worker nodes security group"
   vpc_id      = module.polybot_service_vpc.vpc_id
 
-  # Allow 8443, 443, 22, 3000, 8080 from cp SG
+  # Allow ports 8443, 443, 22, 3000, 8080 from control plane SG
   dynamic "ingress" {
     for_each = [8443, 443, 22, 3000, 8080]
     content {
@@ -233,16 +242,31 @@ resource "aws_security_group" "node" {
     }
   }
 
-  # Allow 8443, 443, 22, 3000, 8080 from self (same SG)
-  dynamic "ingress" {
-    for_each = [8443, 443, 22, 3000, 8080]
-    content {
-      description = "Allow port ${ingress.value} from self"
-      from_port   = ingress.value
-      to_port     = ingress.value
-      protocol    = "tcp"
-      self        = true
-    }
+  # Allow kubelet access (10250) from control plane
+  ingress {
+    description     = "Allow kubelet (10250) from cp SG"
+    from_port       = 10250
+    to_port         = 10250
+    protocol        = "tcp"
+    security_groups = [aws_security_group.cp.id]
+  }
+
+  # Allow kube-apiserver access (6443) from cp SG (optional, if workers also initiate connections)
+  ingress {
+    description     = "Allow API server (6443) from cp SG"
+    from_port       = 6443
+    to_port         = 6443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.cp.id]
+  }
+
+  # Allow all traffic between instances in the same SG
+  ingress {
+    description = "Allow all from self"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
   }
 
   # Egress: allow all outbound traffic
