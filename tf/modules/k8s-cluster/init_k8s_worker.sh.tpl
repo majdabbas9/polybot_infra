@@ -39,6 +39,11 @@ systemctl enable kubelet
 swapoff -a
 (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
 
+# Install and start Amazon SSM Agent
+curl -O https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb
+dpkg -i amazon-ssm-agent.deb
+systemctl enable --now amazon-ssm-agent
+
 # Fetch kubeadm join command from SSM
 JOIN_CMD=$(aws ssm get-parameter \
   --name "/k8s/worker/join-command-majd" \
@@ -47,12 +52,5 @@ JOIN_CMD=$(aws ssm get-parameter \
   --output text \
   --region "eu-west-1")
 
-# Join the cluster
-if [ ! -f /etc/kubernetes/kubelet.conf ]; then
-  sudo $JOIN_CMD >> /var/log/kubeadm-join.log 2>&1
-fi
+sudo $JOIN_CMD
 
-# Install and start Amazon SSM Agent
-curl -O https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb
-dpkg -i amazon-ssm-agent.deb
-systemctl enable --now amazon-ssm-agent
