@@ -186,10 +186,11 @@ resource "aws_security_group" "cp" {
 
   # Allow Kubernetes API server port from worker nodes SG (will reference later)
   ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = [aws_security_group.node.id]
+  description     = "Allow K8s API server access from worker nodes"
+  from_port       = 6443
+  to_port         = 6443
+  protocol        = "tcp"
+  security_groups = [aws_security_group.node.id]
   }
 
   # Allow all outbound traffic
