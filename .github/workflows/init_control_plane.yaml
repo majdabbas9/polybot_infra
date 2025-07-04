@@ -7,6 +7,8 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+      EC2_SSH_KEY:
+        required: true
 
 
 jobs:
