@@ -46,10 +46,8 @@ echo 'br_netfilter' | sudo tee /etc/modules-load.d/k8s.conf
 
 echo 'net.bridge.bridge-nf-call-iptables = 1' | sudo tee /etc/sysctl.d/k8s.conf
 sudo sysctl --system
-# --- Step 7: Disable swap (required by Kubernetes) ---
-swapoff -a
-(crontab -l 2>/dev/null || true; echo "@reboot /sbin/swapoff -a") | crontab -
 
+# Join the worker node to the Kubernetes cluster
 echo "[INFO] Fetching kubeadm join command from SSM..."
 JOIN_CMD=$(aws ssm get-parameter \
   --name "/k8s/worker/join-command-majd" \
@@ -60,4 +58,10 @@ JOIN_CMD=$(aws ssm get-parameter \
 
 echo "[INFO] Join command: $JOIN_CMD"
 eval "sudo $JOIN_CMD"
+
+# --- Step 7: Disable swap (required by Kubernetes) ---
+swapoff -a
+(crontab -l 2>/dev/null || true; echo "@reboot /sbin/swapoff -a") | crontab -
+
+
 
