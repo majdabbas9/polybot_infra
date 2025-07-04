@@ -30,3 +30,9 @@ jobs:
         run: |
           terraform init
           terraform apply -var-file=region.eu-west-1.tfvars --auto-approve
+  init_control_plane:
+    needs: provision
+    uses: ./.github/workflows/init_control_plane.yaml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
