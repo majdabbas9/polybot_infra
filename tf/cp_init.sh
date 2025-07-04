@@ -12,25 +12,39 @@ for i in {1..30}; do
   fi
 done
 
-if [ ! -f /etc/kubernetes/admin.conf ]; then
-  sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+while [ ! -f /etc/kubernetes/admin.conf ]; do
+  echo "[INFO] /etc/kubernetes/admin.conf not found, trying kubeadm init..."
 
-  mkdir -p $HOME/.kube
-  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  if sudo kubeadm init --pod-network-cidr=192.168.0.0/16; then
+    echo "[INFO] kubeadm init succeeded."
 
-  # ✅ Generate and push the join command to SSM
-  JOIN_CMD=$(kubeadm token create --print-join-command)
-  aws ssm put-parameter \
-    --name "/k8s/worker/join-command-majd" \
-    --type "SecureString" \
-    --value "$JOIN_CMD" \
-    --overwrite \
-    --region "eu-west-1"
+    mkdir -p $HOME/.kube
+    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
+    # Generate and push the join command to SSM
+    JOIN_CMD=$(kubeadm token create --print-join-command)
+    aws ssm put-parameter \
+      --name "/k8s/worker/join-command-majd" \
+      --type "SecureString" \
+      --value "$JOIN_CMD" \
+      --overwrite \
+      --region "eu-west-1"
+
+    break  # Exit the loop on success
+  else
+    echo "[WARN] kubeadm init failed, retrying in 10 seconds..."
+    sleep 10
+  fi
+done
+
+if [ -f /etc/kubernetes/admin.conf ]; then
+  echo "Control plane already initialized or successfully initialized now."
 else
-  echo "Control plane already initialized, skipping kubeadm init."
+  echo "Failed to initialize control plane after retries."
+  exit 1
 fi
+
 
 # ✅ Install Calico if not already present
 if ! kubectl get pods -n kube-system | grep calico >/dev/null 2>&1; then
