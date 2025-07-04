@@ -354,9 +354,9 @@ resource "aws_launch_template" "worker_lt" {
 # This Auto Scaling Group (ASG) manages the worker nodes in the Kubernetes cluster.
 resource "aws_autoscaling_group" "worker_asg" {
   name                      = "${var.username}_worker_asg"
-  desired_capacity          = 1
-  max_size                  = 1
-  min_size                  = 1
+  desired_capacity          = 0
+  max_size                  = 2
+  min_size                  = 0
   vpc_zone_identifier       = module.polybot_service_vpc.public_subnets
   health_check_type         = "EC2"
   health_check_grace_period = 300
