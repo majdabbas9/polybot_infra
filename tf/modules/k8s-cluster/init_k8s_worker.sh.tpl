@@ -48,14 +48,16 @@ echo 'net.bridge.bridge-nf-call-iptables = 1' | sudo tee /etc/sysctl.d/k8s.conf
 sudo sysctl --system
 # --- Step 7: Disable swap (required by Kubernetes) ---
 swapoff -a
-(crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
+(crontab -l 2>/dev/null || true; echo "@reboot /sbin/swapoff -a") | crontab -
 
-# Fetch kubeadm join command from SSM
+echo "[INFO] Fetching kubeadm join command from SSM..."
 JOIN_CMD=$(aws ssm get-parameter \
   --name "/k8s/worker/join-command-majd" \
   --with-decryption \
   --query "Parameter.Value" \
   --output text \
   --region "eu-west-1")
-sudo $JOIN_CMD
+
+echo "[INFO] Join command: $JOIN_CMD"
+eval "sudo $JOIN_CMD"
 
