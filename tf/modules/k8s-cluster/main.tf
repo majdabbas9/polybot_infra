@@ -218,7 +218,7 @@ resource "aws_security_group_rule" "cp_allow_node_k8s_api" {
   protocol                 = "-1"
   security_group_id        = aws_security_group.cp.id
   source_security_group_id = aws_security_group.node.id
-  description              = "Allow K8s API server access from worker nodes"
+  description              = "Allow all traffic from workers"
 }
 
 resource "aws_security_group_rule" "node_allow_cp_all" {

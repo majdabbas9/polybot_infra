@@ -48,16 +48,32 @@ echo 'net.bridge.bridge-nf-call-iptables = 1' | sudo tee /etc/sysctl.d/k8s.conf
 sudo sysctl --system
 
 # Join the worker node to the Kubernetes cluster
-echo "[INFO] Fetching kubeadm join command from SSM..."
-JOIN_CMD=$(aws ssm get-parameter \
-  --name "/k8s/worker/join-command-majd" \
-  --with-decryption \
-  --query "Parameter.Value" \
-  --output text \
-  --region "eu-west-1")
+echo "[INFO] Waiting for AWS metadata service..."
+until curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/iam/security-credentials/; do
+  sleep 2
+done
 
-echo "[INFO] Join command: $JOIN_CMD"
-eval "sudo $JOIN_CMD"
+echo "[INFO] Ensuring AWS CLI is in PATH..."
+export PATH=$PATH:/usr/local/bin
+
+for i in {1..5}; do
+  echo "[INFO] Attempt $i: Fetching join command from SSM..."
+  JOIN_CMD=$(/usr/local/bin/aws ssm get-parameter \
+    --name "/k8s/worker/join-command-majd" \
+    --with-decryption \
+    --query "Parameter.Value" \
+    --output text \
+    --region "eu-west-1") && break
+  sleep 5
+done
+
+if [ -z "$JOIN_CMD" ]; then
+  echo "[ERROR] Failed to fetch join command after 5 attempts" >&2
+  exit 1
+fi
+
+echo "[INFO] Running join command..."
+sudo $JOIN_CMD
 
 # --- Step 7: Disable swap (required by Kubernetes) ---
 swapoff -a
