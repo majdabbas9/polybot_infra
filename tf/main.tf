@@ -16,7 +16,7 @@ terraform {
 
 provider "aws" {
   region  = var.region
-  profile = "default"  # change in case you want to work with another AWS account profile
+  # profile = "default"  # change in case you want to work with another AWS account profile
 }
 # if infra == true then build the infrastructure
 # else build the sqs dynamo s3
