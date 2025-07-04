@@ -2,6 +2,15 @@
 set -eux
 
 # Run directly on the EC2 control plane — no SSH inside
+for i in {1..30}; do
+  if command -v kubeadm >/dev/null 2>&1; then
+    echo "kubeadm found!"
+    break
+  else
+    echo "Waiting for kubeadm to be installed... ($i/30)"
+    sleep 5
+  fi
+done
 
 if [ ! -f /etc/kubernetes/admin.conf ]; then
   sudo kubeadm init --pod-network-cidr=192.168.0.0/16
