@@ -45,7 +45,7 @@ JOIN_CMD=$(aws ssm get-parameter \
   --with-decryption \
   --query "Parameter.Value" \
   --output text \
-  --region ${region})
+  --region "eu-west-1")
 
 # Join the cluster
 if [ ! -f /etc/kubernetes/kubelet.conf ]; then
