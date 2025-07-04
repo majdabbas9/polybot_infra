@@ -186,9 +186,9 @@ resource "aws_security_group" "cp" {
 
   # Allow Kubernetes API server port from worker nodes SG (will reference later)
   ingress {
-    from_port       = 6443
-    to_port         = 6443
-    protocol        = "tcp"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
     security_groups = [aws_security_group.node.id]
   }
 
@@ -216,31 +216,12 @@ resource "aws_security_group" "node" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  # Allow node port range for pods (optional, e.g. 30000-32767)
-  ingress {
-    from_port   = 30000
-    to_port     = 32767
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Allow kubelet API from control plane (port 10250)
-  ingress {
-    from_port       = 10250
-    to_port         = 10250
-    protocol        = "tcp"
-    security_groups = [aws_security_group.cp.id]
-  }
-
-  # Allow worker nodes to communicate between themselves (e.g. for networking, overlay)
   ingress {
     from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
+    to_port         = 0
+    protocol        = "-1"
     security_groups = [aws_security_group.cp.id]
   }
-
   # Allow all outbound traffic
   egress {
     from_port   = 0
