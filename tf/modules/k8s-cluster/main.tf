@@ -176,7 +176,6 @@ resource "aws_security_group" "cp" {
   description = "Control plane security group"
   vpc_id      = module.polybot_service_vpc.vpc_id
 
-  # Allow inbound SSH from anywhere (restrict later!)
   ingress {
     from_port   = 22
     to_port     = 22
@@ -184,24 +183,11 @@ resource "aws_security_group" "cp" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow Kubernetes API server port from worker nodes SG (will reference later)
-  ingress {
-  description     = "Allow K8s API server access from worker nodes"
-  from_port       = 6443
-  to_port         = 6443
-  protocol        = "tcp"
-  security_groups = [aws_security_group.node.id]
-  }
-
-  # Allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-  tags = {
-    Name = "cp-sg"
   }
 }
 
@@ -210,30 +196,39 @@ resource "aws_security_group" "node" {
   description = "Worker nodes security group"
   vpc_id      = module.polybot_service_vpc.vpc_id
 
-  # Allow inbound SSH from anywhere (restrict later!)
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = [aws_security_group.cp.id]
-  }
-  # Allow all outbound traffic
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
 
-  tags = {
-    Name = "node-sg"
-  }
+resource "aws_security_group_rule" "cp_allow_node_k8s_api" {
+  type                     = "ingress"
+  from_port                = 6443
+  to_port                  = 6443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.cp.id
+  source_security_group_id = aws_security_group.node.id
+  description              = "Allow K8s API server access from worker nodes"
+}
+
+resource "aws_security_group_rule" "node_allow_cp_all" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  security_group_id        = aws_security_group.node.id
+  source_security_group_id = aws_security_group.cp.id
+  description              = "Allow all traffic from control plane"
 }
 
 resource "aws_iam_role" "polybot_role" {
