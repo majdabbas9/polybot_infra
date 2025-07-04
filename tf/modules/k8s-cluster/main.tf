@@ -355,7 +355,7 @@ resource "aws_launch_template" "worker_lt" {
 resource "aws_autoscaling_group" "worker_asg" {
   name                      = "${var.username}_worker_asg"
   desired_capacity          = 1
-  max_size                  = 2
+  max_size                  = 1
   min_size                  = 1
   vpc_zone_identifier       = module.polybot_service_vpc.public_subnets
   health_check_type         = "EC2"
