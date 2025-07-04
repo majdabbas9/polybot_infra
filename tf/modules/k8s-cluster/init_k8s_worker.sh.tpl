@@ -41,7 +41,7 @@ swapoff -a
 
 # Fetch kubeadm join command from SSM
 JOIN_CMD=$(aws ssm get-parameter \
-  --name "/k8s/worker/join-command" \
+  --name "/k8s/worker/join-command-majd" \
   --with-decryption \
   --query "Parameter.Value" \
   --output text \
@@ -49,7 +49,7 @@ JOIN_CMD=$(aws ssm get-parameter \
 
 # Join the cluster
 if [ ! -f /etc/kubernetes/kubelet.conf ]; then
-  $JOIN_CMD
+  sudo $JOIN_CMD >> /var/log/kubeadm-join.log 2>&1
 fi
 
 # Install and start Amazon SSM Agent
