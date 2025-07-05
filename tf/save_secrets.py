@@ -3,37 +3,43 @@ import json
 import sys
 import logging
 
-# Enable debug logging for boto3 and botocore
-logging.basicConfig(level=logging.INFO)
+# Configure logging to print to stdout with timestamps
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+
+# Enable detailed debug logging for boto3/botocore (optional: comment out if too verbose)
 boto3.set_stream_logger(name='boto3', level=logging.DEBUG)
 boto3.set_stream_logger(name='botocore', level=logging.DEBUG)
 
 def store_secret(secret_name, secret_dict):
-    client = boto3.client('secretsmanager', region_name='eu-west-1')  # ✅ Fix typo in region
+    client = boto3.client('secretsmanager', region_name='eu-west-1')
 
-    print(f"🔐 Storing secret: {secret_name}")
-    print(f"📦 Payload: {json.dumps(secret_dict, indent=2)}")
+    logging.info(f"🔐 Storing secret: {secret_name}")
+    logging.info(f"📦 Payload: {json.dumps(secret_dict, indent=2)}")
 
     try:
         client.create_secret(
             Name=secret_name,
             SecretString=json.dumps(secret_dict)
         )
-        print(f"✅ Created secret: {secret_name}")
+        logging.info(f"✅ Created secret: {secret_name}")
     except client.exceptions.ResourceExistsException:
-        print(f"ℹ️ Secret already exists, updating: {secret_name}")
+        logging.info(f"ℹ️ Secret already exists, updating: {secret_name}")
         client.put_secret_value(
             SecretId=secret_name,
             SecretString=json.dumps(secret_dict)
         )
-        print(f"♻️ Updated secret: {secret_name}")
+        logging.info(f"♻️ Updated secret: {secret_name}")
     except Exception as e:
-        print(f"❌ Failed to store secret {secret_name}: {e}")
-        raise
+        logging.exception(f"❌ Failed to store secret {secret_name}: {e}")
+        sys.exit(1)  # Exit with error code to fail GitHub Action
 
 def main():
     if len(sys.argv) != 7:
-        print("Usage: python3 save_secrets.py <TELEGRAM_TOKEN_DEV> <TELEGRAM_TOKEN_PROD> <DEV_BUCKET_ID> <PROD_BUCKET_ID> <DEV_SQS_URL> <PROD_SQS_URL>")
+        logging.error("Usage: python3 save_secrets.py <TELEGRAM_TOKEN_DEV> <TELEGRAM_TOKEN_PROD> <DEV_BUCKET_ID> <PROD_BUCKET_ID> <DEV_SQS_URL> <PROD_SQS_URL>")
         sys.exit(1)
 
     (
@@ -45,7 +51,7 @@ def main():
         prod_sqs_url
     ) = sys.argv[1:]
 
-    print("🚀 Starting secret storage process")
+    logging.info("🚀 Starting secret storage process")
 
     store_secret("majd/dev", {
         "telegram_token": telegram_token_dev,
@@ -59,7 +65,7 @@ def main():
         "sqs_queue_url": prod_sqs_url
     })
 
-    print("✅ All secrets processed")
+    logging.info("✅ All secrets processed successfully.")
 
 if __name__ == "__main__":
     main()
