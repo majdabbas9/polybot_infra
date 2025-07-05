@@ -48,6 +48,7 @@ jobs:
           TELEGRAM_TOKEN_DEV="${{ secrets.TELEGRAM_TOKEN_DEV }}"
           TELEGRAM_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
           echo $(terraform output -raw s3_bucket_id_dev)
+          echo "hi"
           #DEV_BUCKET_ID=terraform output -raw s3_bucket_id_dev
           #PROD_BUCKET_ID=terraform output -raw s3_bucket_id_prod
           #DEV_SQS_URL=terraform output -raw sqs_queue_url_dev
