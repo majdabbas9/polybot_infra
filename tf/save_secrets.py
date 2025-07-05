@@ -41,7 +41,6 @@ def main():
     if len(sys.argv) != 7:
         logging.error("Usage: python3 save_secrets.py <TELEGRAM_TOKEN_DEV> <TELEGRAM_TOKEN_PROD> <DEV_BUCKET_ID> <PROD_BUCKET_ID> <DEV_SQS_URL> <PROD_SQS_URL>")
         sys.exit(1)
-
     (
         telegram_token_dev,
         telegram_token_prod,
