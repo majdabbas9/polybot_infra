@@ -28,8 +28,8 @@ jobs:
 
       - name: Terraform Init & Apply
         run: |
-          terraform init
-          terraform apply -var-file=region.eu-west-1.tfvars --auto-approve
+          #terraform init
+          #terraform apply -var-file=region.eu-west-1.tfvars --auto-approve
   init_control_plane:
     needs: provision
     uses: ./.github/workflows/init_control_plane.yaml
