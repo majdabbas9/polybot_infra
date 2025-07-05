@@ -3,7 +3,7 @@ import json
 import sys
 
 def store_secret(secret_name, secret_dict):
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager',region_name='eu-wast-1')
     try:
         client.create_secret(
             Name=secret_name,
