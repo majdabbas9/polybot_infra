@@ -38,21 +38,20 @@ jobs:
         run: |
           terraform init
           terraform output -raw control_plane_public_ip > ip.txt
-
+      - name: Install boto3
+        run: pip3 install boto3
       - name : saving secrets
         working-directory: tf
         run:
-          pip install boto3
           terraform output -json > tf_outputs.json
-          echo tf_outputs.json
-          #TELEGRAM_TOKEN_DEV="${{ secrets.TELEGRAM_TOKEN_DEV }}"
-          #TELEGRAM_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
-          #DEV_BUCKET_ID=$(jq -r '.s3_bucket_id_dev.value' tf_outputs.json)
-          #PROD_BUCKET_ID=$(jq -r '.s3_bucket_id_prod.value' tf_outputs.json)
-          #DEV_SQS_URL=$(jq -r '.sqs_queue_url_dev.value' tf_outputs.json)
-          #PROD_SQS_URL=$(jq -r '.sqs_queue_url_prod.value' tf_outputs.json)
-          #echo "Running Python script with extracted values..."
-          #python3 save_secrets.py $TELEGRAM_TOKEN_DEV $TELEGRAM_TOKEN "$DEV_BUCKET_ID" "$PROD_BUCKET_ID" "$DEV_SQS_URL" "$PROD_SQS_URL"
+          TELEGRAM_TOKEN_DEV="${{ secrets.TELEGRAM_TOKEN_DEV }}"
+          TELEGRAM_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
+          DEV_BUCKET_ID=$(jq -r '.s3_bucket_id_dev.value' tf_outputs.json)
+          PROD_BUCKET_ID=$(jq -r '.s3_bucket_id_prod.value' tf_outputs.json)
+          DEV_SQS_URL=$(jq -r '.sqs_queue_url_dev.value' tf_outputs.json)
+          PROD_SQS_URL=$(jq -r '.sqs_queue_url_prod.value' tf_outputs.json)
+          echo "Running Python script with extracted values..."
+          python3 save_secrets.py $TELEGRAM_TOKEN_DEV $TELEGRAM_TOKEN "$DEV_BUCKET_ID" "$PROD_BUCKET_ID" "$DEV_SQS_URL" "$PROD_SQS_URL"
 
       - name: Save EC2 SSH key
         working-directory: tf
