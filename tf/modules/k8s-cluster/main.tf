@@ -247,7 +247,8 @@ resource "aws_iam_role" "polybot_role" {
 
 resource "aws_iam_policy" "polybot_policy" {
   name        = "${var.username}_polybot_policy"
-  description = "Policy for access to DynamoDB, S3, and SQS"
+  description = "Policy for access to DynamoDB, S3, SQS, SSM, and Secrets Manager"
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -289,6 +290,16 @@ resource "aws_iam_policy" "polybot_policy" {
           "ssm:PutParameter"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "SecretsManagerAccess"
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:CreateSecret",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = "arn:aws:secretsmanager:*:*:secret:majd/*"
       }
     ]
   })
@@ -580,3 +591,4 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_instance_policy" {
   role       = aws_iam_role.polybot_role.name
   policy_arn = aws_iam_policy.ssm_instance_policy.arn
 }
+
