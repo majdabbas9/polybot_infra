@@ -42,13 +42,8 @@ jobs:
       - name: Install boto3
         run: pip3 install boto3
 
-      - name: Debug AWS credentials
-        run: |
-          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
-          aws sts get-caller-identity
-
-      - name: Check python version
-        run: python3 --version
+      - name: Test Python logging
+        run: python3 test_log.py
 
       - name : saving secrets
         working-directory: tf
