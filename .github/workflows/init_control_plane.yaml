@@ -47,16 +47,12 @@ jobs:
         run:
           TELEGRAM_TOKEN_DEV="${{ secrets.TELEGRAM_TOKEN_DEV }}"
           TELEGRAM_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
-          DEV_BUCKET_ID=terraform output -raw s3_bucket_id_dev
-          echo $DEV_BUCKET_ID
-          #PROD_BUCKET_ID=terraform output -raw s3_bucket_id_prod
-          #echo ${PROD_BUCKET_ID}
-          #DEV_SQS_URL=terraform output -raw sqs_queue_url_dev
-          #echo ${DEV_SQS_URL}
-          #PROD_SQS_URL=terraform output -raw sqs_queue_url_prod
-          #echo ${PROD_SQS_URL}
-          #echo "Running Python script with extracted values..."
-          #python3 save_secrets.py $TELEGRAM_TOKEN_DEV $TELEGRAM_TOKEN "$DEV_BUCKET_ID" "$PROD_BUCKET_ID" "$DEV_SQS_URL" "$PROD_SQS_URL"
+          DEV_BUCKET_ID=$(terraform output -raw s3_bucket_id_dev)
+          PROD_BUCKET_ID=$(terraform output -raw s3_bucket_id_prod)
+          DEV_SQS_URL=$(terraform output -raw sqs_queue_url_dev)
+          PROD_SQS_URL=$(terraform output -raw sqs_queue_url_prod)
+          echo "Running Python script with extracted values..."
+          python3 save_secrets.py $TELEGRAM_TOKEN_DEV $TELEGRAM_TOKEN "$DEV_BUCKET_ID" "$PROD_BUCKET_ID" "$DEV_SQS_URL" "$PROD_SQS_URL"
 
       - name: Save EC2 SSH key
         working-directory: tf
