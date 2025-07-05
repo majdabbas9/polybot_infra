@@ -40,9 +40,11 @@ jobs:
           terraform output -raw control_plane_public_ip > ip.txt
 
       - name: Install boto3
+        working-directory: tf
         run: pip3 install boto3
 
       - name: Test Python logging
+        working-directory: tf
         run: python3 test_log.py
 
       - name : saving secrets
