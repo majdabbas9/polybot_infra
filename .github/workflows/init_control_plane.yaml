@@ -42,6 +42,11 @@ jobs:
       - name: Install boto3
         run: pip3 install boto3
 
+      - name: Debug AWS credentials
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
+          aws sts get-caller-identity
+
       - name : saving secrets
         working-directory: tf
         run:
@@ -63,6 +68,6 @@ jobs:
       - name: Copy and Run Init Script on Control Plane
         working-directory: tf
         run: |
-          chmod +x cp_init.sh
-          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
+          #chmod +x cp_init.sh
+          #scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
+          #ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
