@@ -1,6 +1,12 @@
 #!/bin/bash
 set -eux
 
+# ✅ Exit early if control plane is already initialized
+if [ -f /etc/kubernetes/admin.conf ]; then
+  echo "[INFO] Kubernetes control plane already initialized. Exiting."
+  exit 0
+fi
+
 # Run directly on the EC2 control plane — no SSH inside
 for i in {1..30}; do
   if command -v kubeadm >/dev/null 2>&1; then
@@ -44,8 +50,7 @@ else
   echo "Failed to initialize control plane after retries."
   exit 1
 fi
-
-
+sleep 120
 # ✅ Install Calico if not already present
 if ! kubectl get pods -n kube-system | grep calico >/dev/null 2>&1; then
   kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/calico.yaml
