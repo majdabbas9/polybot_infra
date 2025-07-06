@@ -52,13 +52,13 @@ def main():
 
     logging.info("🚀 Starting secret storage process")
 
-    store_secret("majd/dev", {
+    store_secret("majd/dev/polybot", {
         "telegram_token": telegram_token_dev,
         "s3_bucket_id": dev_bucket_id,
         "sqs_queue_url": dev_sqs_url
     })
 
-    store_secret("majd/prod", {
+    store_secret("majd/prod/polybot", {
         "telegram_token": telegram_token_prod,
         "s3_bucket_id": prod_bucket_id,
         "sqs_queue_url": prod_sqs_url
