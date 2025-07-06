@@ -26,7 +26,7 @@ def get_secret(secret_name):
 def main():
     if len(sys.argv) != 2:
         print("Usage: python3 get_secrets.py <secret_name>")
-        print("Example: python3 get_secrets.py majd/dev")
+        print("Example: python3 get_secrets.py majd/dev/polybot")
         sys.exit(1)
 
     secret_name = sys.argv[1]
