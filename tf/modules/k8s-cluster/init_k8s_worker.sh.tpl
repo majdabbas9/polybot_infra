@@ -55,7 +55,7 @@ done
 
 echo "[INFO] Ensuring AWS CLI is in PATH..."
 export PATH=$PATH:/usr/local/bin
-
+sleep 15
 for i in {1..5}; do
   echo "[INFO] Attempt $i: Fetching join command from SSM..."
   JOIN_CMD=$(/usr/local/bin/aws ssm get-parameter \
