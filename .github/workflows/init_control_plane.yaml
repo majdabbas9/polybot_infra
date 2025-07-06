@@ -70,6 +70,6 @@ jobs:
       - name: Copy and Run Init Script on Control Plane
         working-directory: tf
         run: |
-          #chmod +x cp_init.sh
-          #scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
-          #ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
+          chmod +x cp_init.sh
+          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
