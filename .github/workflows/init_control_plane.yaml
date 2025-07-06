@@ -51,7 +51,7 @@ jobs:
         working-directory: tf
         env:
           PYTHONUNBUFFERED: 1
-        run:
+        run: |
           TELEGRAM_TOKEN_DEV="${{ secrets.TELEGRAM_TOKEN_DEV }}"
           TELEGRAM_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
           DEV_BUCKET_ID=$(terraform output -raw s3_bucket_id_dev)
