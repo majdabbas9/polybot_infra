@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/majdabbas9/polybot_infra
     targetRevision: HEAD
-    path: polybot-dev-k8s/polybot-dev
+    path: polybot-k8s/polybot-dev
   destination:
     server: https://kubernetes.default.svc
     namespace: default
