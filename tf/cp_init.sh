@@ -52,7 +52,7 @@ else
   echo "Failed to initialize control plane after retries."
   exit 1
 fi
-sleep 120
+sleep 240
 # ✅ Install Calico if not already present
 if ! kubectl get pods -n kube-system | grep calico >/dev/null 2>&1; then
   kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/calico.yaml

@@ -15,7 +15,16 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - image: majdabbas99/polybot_build_dev:188
-        name: polybot_container
-      - env:
-        - ENVironment: dev
+      - image: majdabbas99/polybot_build_dev:189
+        name: polybot-container
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: polybot-service
+spec:
+  selector:
+    app: polybot-dev
+  ports:
+    - port: 8443         # Internal port (what Ingress sees)
+      targetPort: 8443   # Your app's container port
