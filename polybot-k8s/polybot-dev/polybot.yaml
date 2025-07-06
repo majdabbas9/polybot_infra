@@ -15,7 +15,7 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - image: majdabbas99/polybot_build_dev:188
+      - image: majdabbas99/polybot_build_dev
         name: polybot_container
       - env:
         - ENVironment: dev
