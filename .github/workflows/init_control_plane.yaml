@@ -73,8 +73,8 @@ jobs:
           chmod +x cp_init.sh
           scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
+
       - name: depoly polybot_dev
         working-directory: argoCD
         run: |
-            python3 change_yaml.py --src ../polybot-k8s/polybot-dev/polybot.yaml --dest ../polybot-k8s/polybot-dev/polybot.yaml /
-              --ssm /majd/dev/polybot_image_name --region eu-west-1
+            python3 change_yaml.py --src ../polybot-k8s/polybot-dev/polybot.yaml --dest ../polybot-k8s/polybot-dev/polybot.yaml --ssm /majd/dev/polybot_image_name --region eu-west-1
