@@ -1,14 +1,36 @@
 #!/bin/bash
 set -eux
+
+#!/bin/bash
+
+# Check if helm is installed
+if ! command -v helm &> /dev/null; then
+  echo "Helm not found, installing Helm..."
+  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+else
+  echo "Helm is already installed."
+fi
+
+# Verify helm installation
+helm version
+
+# Add ingress-nginx repo
+echo "Adding ingress-nginx Helm repo..."
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+# Update Helm repos
+echo "Updating Helm repos..."
 helm repo update
 
+# Install nginx ingress with NodePort 31080 (HTTP) and 30001 (HTTPS)
+echo "Installing nginx ingress controller..."
 helm install nginx-ingress ingress-nginx/ingress-nginx \
   --namespace ingress-nginx --create-namespace \
   --set controller.service.type=NodePort \
   --set controller.service.nodePorts.http=31080 \
   --set controller.service.nodePorts.https=30001
 
+echo "Done!"
 # ✅ Exit early if control plane is already initialized
 if [ -f /etc/kubernetes/admin.conf ]; then
   echo "[INFO] Kubernetes control plane already initialized. Exiting."
@@ -92,3 +114,4 @@ if ! kubectl get deployment "$ARGOCD_DEPLOYMENT" -n "$NAMESPACE" > /dev/null 2>&
 else
   echo "✅ Argo CD is already installed in $NAMESPACE."
 fi
+
