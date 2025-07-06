@@ -212,7 +212,7 @@ resource "aws_security_group" "node" {
     from_port       = 30001
     to_port         = 30001
     protocol        = "tcp"
-    security_groups = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
