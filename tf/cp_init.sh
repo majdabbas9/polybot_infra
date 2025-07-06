@@ -84,3 +84,12 @@ if ! kubectl get deployment "$ARGOCD_DEPLOYMENT" -n "$NAMESPACE" > /dev/null 2>&
 else
   echo "✅ Argo CD is already installed in $NAMESPACE."
 fi
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm install nginx-ingress ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx --create-namespace \
+  --set controller.service.type=NodePort \
+  --set controller.service.nodePorts.http=31080 \
+  --set controller.service.nodePorts.https=30001
