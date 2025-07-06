@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: polybot-dev
   labels:
     app: polybot-dev
+  name: polybot-dev
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - name: polybot_container
-        image: majdabbas99/polybot-dev-k8s
+      - image: majdabbas99/polybot_build_dev:188
+        name: polybot_container
       - env:
-          - ENVironment: "dev"
+        - ENVironment: dev

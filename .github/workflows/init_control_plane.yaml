@@ -76,5 +76,7 @@ jobs:
 
       - name: depoly polybot_dev
         working-directory: argoCD
+        env:
+          PYTHONUNBUFFERED: 1
         run: |
             python3 change_yaml.py --src ../polybot-k8s/polybot-dev/polybot.yaml --dest ../polybot-k8s/polybot-dev/polybot.yaml --ssm /majd/dev/polybot_image_name --region eu-west-1
