@@ -330,104 +330,104 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 #--------------------------------------------------------- load balancer-----------------------------------
-# resource "aws_security_group" "lb_sg" {
-#   name        = "alb-sg"
-#   description = "Allow HTTPS traffic to ALB"
-#   vpc_id      = module.polybot_service_vpc.vpc_id
-#
-#   ingress {
-#     from_port   = 443
-#     to_port     = 443
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-# }
-#
-# resource "aws_lb_target_group" "worker_tg" {
-#   name        = "${var.username}-tg"
-#   port        = 31080                # NodePort
-#   protocol    = "HTTP"
-#   vpc_id      = module.polybot_service_vpc.vpc_id
-#   target_type = "instance"
-#
-#   health_check {
-#     enabled             = true
-#     interval            = 30
-#     path                = "/healthz"
-#     protocol            = "HTTP"
-#     timeout             = 5
-#     healthy_threshold   = 2
-#     unhealthy_threshold = 2
-#   }
-# }
-#
-# resource "aws_lb" "worker_alb" {
-#   name               = "${var.username}-alb"
-#   internal           = false
-#   load_balancer_type = "application"
-#   subnets            = module.polybot_service_vpc.public_subnets
-#   security_groups    = [aws_security_group.lb_sg.id]
-# }
-# # Lookup the hosted zone for fursa.click
-# data "aws_route53_zone" "main_zone" {
-#   name         = "fursa.click"
-#   private_zone = false
-# }
-#
-# # Create A record for majd.app.fursa.click -> ALB
-# resource "aws_route53_record" "majd_subdomain" {
-#   zone_id = data.aws_route53_zone.main_zone.zone_id
-#   name    = "majd.app"
-#   type    = "A"
-#
-#   alias {
-#     name                   = aws_lb.worker_alb.dns_name
-#     zone_id                = aws_lb.worker_alb.zone_id
-#     evaluate_target_health = true
-#   }
-# }
-#
-# resource "aws_acm_certificate" "majd_cert" {
-#   domain_name       = "majd.app.fursa.click"
-#   validation_method = "DNS"
-#
-#   tags = {
-#     Name = "majd.app.fursa.click Cert"
-#   }
-# }
-#
-# resource "aws_route53_record" "majd_cert_validation" {
-#   name    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_name
-#   type    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_type
-#   zone_id = data.aws_route53_zone.main_zone.zone_id
-#   records = [tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_value]
-#   ttl     = 300
-# }
-#
-# resource "aws_acm_certificate_validation" "majd_cert_validation" {
-#   certificate_arn         = aws_acm_certificate.majd_cert.arn
-#   validation_record_fqdns = [aws_route53_record.majd_cert_validation.fqdn]
-# }
-#
-# resource "aws_lb_listener" "https" {
-#   load_balancer_arn = aws_lb.worker_alb.arn
-#   port              = 443
-#   protocol          = "HTTPS"
-#   ssl_policy        = "ELBSecurityPolicy-2016-08"
-#   certificate_arn   = aws_acm_certificate_validation.majd_cert_validation.certificate_arn
-#
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.worker_tg.arn  # your existing target group
-#   }
-# }
+resource "aws_security_group" "lb_sg" {
+  name        = "alb-sg"
+  description = "Allow HTTPS traffic to ALB"
+  vpc_id      = module.polybot_service_vpc.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb_target_group" "worker_tg" {
+  name        = "${var.username}-tg"
+  port        = 31080                # NodePort
+  protocol    = "HTTP"
+  vpc_id      = module.polybot_service_vpc.vpc_id
+  target_type = "instance"
+
+  health_check {
+    enabled             = true
+    interval            = 30
+    path                = "/healthz"
+    protocol            = "HTTP"
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+}
+
+resource "aws_lb" "worker_alb" {
+  name               = "${var.username}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  subnets            = module.polybot_service_vpc.public_subnets
+  security_groups    = [aws_security_group.lb_sg.id]
+}
+# Lookup the hosted zone for fursa.click
+data "aws_route53_zone" "main_zone" {
+  name         = "fursa.click"
+  private_zone = false
+}
+
+# Create A record for majd.app.fursa.click -> ALB
+resource "aws_route53_record" "majd_subdomain" {
+  zone_id = data.aws_route53_zone.main_zone.zone_id
+  name    = "majd.app"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.worker_alb.dns_name
+    zone_id                = aws_lb.worker_alb.zone_id
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_acm_certificate" "majd_cert" {
+  domain_name       = "majd.app.fursa.click"
+  validation_method = "DNS"
+
+  tags = {
+    Name = "majd.app.fursa.click Cert"
+  }
+}
+
+resource "aws_route53_record" "majd_cert_validation" {
+  name    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_name
+  type    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_type
+  zone_id = data.aws_route53_zone.main_zone.zone_id
+  records = [tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_value]
+  ttl     = 300
+}
+
+resource "aws_acm_certificate_validation" "majd_cert_validation" {
+  certificate_arn         = aws_acm_certificate.majd_cert.arn
+  validation_record_fqdns = [aws_route53_record.majd_cert_validation.fqdn]
+}
+
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.worker_alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate_validation.majd_cert_validation.certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.worker_tg.arn  # your existing target group
+  }
+}
 #--------------------------------------------------------- k8s cluster-----------------------------------
 # This EC2 instance serves as the Kubernetes control plane (CP).
 resource "aws_instance" "k8s_cp" {
