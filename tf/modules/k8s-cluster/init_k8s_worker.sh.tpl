@@ -57,7 +57,7 @@ echo "[INFO] Ensuring AWS CLI is in PATH..."
 export PATH=$PATH:/usr/local/bin
 for i in {1..60}; do
   echo "[INFO] Attempt $i: Fetching join command from SSM..."
-  JOIN_CMD=$(/usr/local/bin/aws ssm get-parameter \
+  JOIN_CMD=$(aws ssm get-parameter \
     --name "/k8s/worker/join-command-majd" \
     --with-decryption \
     --query "Parameter.Value" \

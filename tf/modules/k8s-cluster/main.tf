@@ -438,7 +438,56 @@ resource "aws_instance" "k8s_cp" {
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
-  user_data                   = file("${path.module}/init_k8s_cp.sh")
+  user_data = <<-EOF
+    #!/bin/bash
+    exec > /var/log/user-data.log 2>&1
+    set -eux
+
+    KUBERNETES_VERSION=v1.32
+    echo "Reached k1" >> /var/log/k.txt
+
+    apt-get update
+    apt-get install -y jq unzip ebtables ethtool curl software-properties-common apt-transport-https ca-certificates gpg
+
+    echo "Reached k2" >> /var/log/k.txt
+
+    # install awscli
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip -q awscliv2.zip
+    ./aws/install --update
+
+    echo "Reached k3" >> /var/log/k.txt
+
+    cat <<EOT | tee /etc/sysctl.d/k8s.conf
+    net.ipv4.ip_forward = 1
+    EOT
+
+    sysctl --system
+
+    echo "Reached k4" >> /var/log/k.txt
+
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+
+    curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" | tee /etc/apt/sources.list.d/cri-o.list
+
+    apt-get update
+    apt-get install -y cri-o kubelet kubeadm kubectl
+    apt-mark hold kubelet kubeadm kubectl
+
+    echo "Reached k5" >> /var/log/k.txt
+
+    systemctl start crio
+    systemctl enable --now crio
+    systemctl enable --now kubelet
+
+    swapoff -a
+    (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
+
+    echo "Finished successfully" >> /var/log/k.txt
+  EOF
+
 
   tags = {
     Name = "${var.username}-k8s-cp"
@@ -468,7 +517,76 @@ resource "aws_launch_template" "worker_lt" {
     }
   }
 
-  user_data = base64encode(templatefile("${path.module}/init_k8s_worker.sh.tpl", {region      = var.region, secret_name = "kubeadm-join-command" }))
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    exec > /var/log/worker-init.log 2>&1
+    set -euxo pipefail
+
+    apt-get update
+    apt-get install -y curl jq unzip ebtables ethtool gpg apt-transport-https ca-certificates software-properties-common
+
+    curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip -q awscliv2.zip
+    sudo ./aws/install --update
+
+    echo 'net.ipv4.ip_forward = 1' > /etc/sysctl.d/k8s.conf
+    sysctl --system
+
+    mkdir -p /etc/apt/keyrings
+
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
+
+    curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" > /etc/apt/sources.list.d/cri-o.list
+
+    apt-get update
+    apt-get install -y cri-o kubelet kubeadm kubectl
+    apt-mark hold kubelet kubeadm kubectl
+
+    systemctl enable --now crio
+    systemctl enable --now kubelet
+
+    sudo apt install -y snapd
+    sudo snap install amazon-ssm-agent --classic
+    sudo systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+    sudo systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+
+    sudo modprobe br_netfilter
+    echo 'br_netfilter' | sudo tee /etc/modules-load.d/k8s.conf
+    echo 'net.bridge.bridge-nf-call-iptables = 1' | sudo tee /etc/sysctl.d/k8s.conf
+    sudo sysctl --system
+
+    echo "[INFO] Waiting for AWS metadata service..."
+    until curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/iam/security-credentials/; do
+      sleep 2
+    done
+
+    echo "[INFO] Ensuring AWS CLI is in PATH..."
+    export PATH=$PATH:/usr/local/bin
+    for i in {1..60}; do
+      echo "[INFO] Attempt $i: Fetching join command from SSM..."
+      JOIN_CMD=$(aws ssm get-parameter \
+        --name "/k8s/worker/join-command-majd" \
+        --with-decryption \
+        --query "Parameter.Value" \
+        --output text \
+        --region "eu-west-1") && break
+      sleep 5
+    done
+
+    if [ -z "$JOIN_CMD" ]; then
+      echo "[ERROR] Failed to fetch join command after 5 attempts" >&2
+      exit 1
+    fi
+
+    echo "[INFO] Running join command..."
+    sudo $JOIN_CMD
+
+    swapoff -a
+    (crontab -l 2>/dev/null || true; echo "@reboot /sbin/swapoff -a") | crontab -
+  EOF
+  )
 }
 
 # This Auto Scaling Group (ASG) manages the worker nodes in the Kubernetes cluster.
