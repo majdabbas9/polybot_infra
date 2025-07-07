@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: polybot-ingress-app
+  namespace: argocd            # The namespace where ArgoCD is installed
+spec:
+  project: default             # ArgoCD project to associate with
+  source:
+    repoURL: 'https://github.com/your-org/your-repo.git'  # Change to your Git repo URL
+    targetRevision: HEAD       # Branch or tag
+    path: ingress/ingress.yaml  # Path inside the repo where ingress.yaml is stored
+  destination:
+    server: 'https://kubernetes.default.svc'  # Kubernetes API server (default)
+    namespace: default         # Namespace where the ingress should be deployed
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

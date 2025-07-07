@@ -6,12 +6,15 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/majdabbas9/polybot_infra
+    repoURL: 'https://github.com/majdabbas9/polybot_infra'
     targetRevision: HEAD
     path: polybot-k8s/polybot-dev
   destination:
-    server: https://kubernetes.default.svc
-    namespace: default
+    server: 'https://kubernetes.default.svc'
+    namespace: dev
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
