@@ -26,13 +26,13 @@ INGRESS_RELEASE="nginx-ingress"
 HTTP_PORT=31080
 HTTPS_PORT=30001
 
-# Create Argo CD Namespace if needed
-if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
-  echo "🔧 Creating namespace $NAMESPACE..."
-  kubectl create namespace "$NAMESPACE"
-else
-  echo "✅ Namespace $NAMESPACE already exists."
-fi
+## Create Argo CD Namespace if needed
+#if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
+#  echo "🔧 Creating namespace $NAMESPACE..."
+#  kubectl create namespace "$NAMESPACE"
+#else
+#  echo "✅ Namespace $NAMESPACE already exists."
+#fi
 
 # Install Helm if missing
 if ! command -v helm &> /dev/null; then
@@ -47,19 +47,19 @@ helm version
 
 # Add Helm repos
 echo "📦 Adding Argo CD and Ingress-NGINX Helm repositories..."
-helm repo add argo "$ARGOCD_HELM_REPO" || true
+# helm repo add argo "$ARGOCD_HELM_REPO" || true
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
 
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
-# Install Argo CD Helm chart
-if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
-  echo "🚀 Installing Argo CD via Helm into namespace $NAMESPACE..."
-  helm install "$RELEASE_NAME" argo/"$ARGOCD_HELM_CHART" -n "$NAMESPACE"
-else
-  echo "✅ Argo CD Helm release '$RELEASE_NAME' already exists in namespace $NAMESPACE."
-fi
+## Install Argo CD Helm chart
+#if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+#  echo "🚀 Installing Argo CD via Helm into namespace $NAMESPACE..."
+#  helm install "$RELEASE_NAME" argo/"$ARGOCD_HELM_CHART" -n "$NAMESPACE"
+#else
+#  echo "✅ Argo CD Helm release '$RELEASE_NAME' already exists in namespace $NAMESPACE."
+#fi
 
 # Install Ingress NGINX Helm chart
 if ! helm status "$INGRESS_RELEASE" -n "$INGRESS_NAMESPACE" > /dev/null 2>&1; then
