@@ -1,30 +1,5 @@
 #!/bin/bash
 set -euxo pipefail
-set -x
-
-MARKER_FILE="/var/local/cluster-init.done"
-if [ -f "$MARKER_FILE" ]; then
-  echo "Cluster init script already ran, exiting."
-  exit 0
-fi
-
-# Wait for at least one Ready worker node (not the control plane)
-for i in {1..60}; do  # 10 minutes max (60 * 10s)
-  READY_WORKERS=$(kubectl get nodes --no-headers 2>/dev/null | grep -v master | grep -v control-plane | grep -c " Ready")
-  if [ "$READY_WORKERS" -ge 1 ]; then
-    echo "✅ Worker node joined and is Ready!"
-    break
-  else
-    echo "⏳ Waiting for a worker node to join... ($i/60)"
-    sleep 10
-  fi
-done
-
-READY_WORKERS=$(kubectl get nodes --no-headers 2>/dev/null | grep -v master | grep -v control-plane | grep -c " Ready")
-if [ "$READY_WORKERS" -lt 1 ]; then
-  echo "❌ Timeout waiting for worker node to join."
-  exit 1
-fi
 
 # Install Calico if not installed
 if ! kubectl get pods -n kube-system | grep calico >/dev/null 2>&1; then
@@ -98,6 +73,3 @@ else
   echo "✅ Ingress-NGINX Helm release '$INGRESS_RELEASE' already exists in namespace $INGRESS_NAMESPACE."
 fi
 
-# Mark the script as done so it does not run twice
-touch "$MARKER_FILE"
-echo "Cluster init script completed successfully."
