@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default             # ArgoCD project to associate with
   source:
-    repoURL: 'https://github.com/your-org/your-repo.git'  # Change to your Git repo URL
+    repoURL: 'https://github.com/majdabbas9/polybot_infra'  # Change to your Git repo URL
     targetRevision: HEAD       # Branch or tag
     path: ingress/ingress.yaml  # Path inside the repo where ingress.yaml is stored
   destination:
