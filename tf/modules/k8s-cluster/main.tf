@@ -646,10 +646,11 @@ resource "aws_autoscaling_group" "worker_asg" {
     id      = aws_launch_template.worker_lt.id
     version = "$Latest"
   }
-  #target_group_arns = [aws_lb_target_group.worker_tg.arn]
+
   tag {
     key                 = "Name"
     value               = "${var.username}_worker"
+    propagate_at_launch = true
   }
 
   lifecycle {
