@@ -17,7 +17,7 @@ output "dev_sqs_queue_url" {
 output "prod_sqs_queue_url" {
   value = aws_sqs_queue.sqs_prod.id
 }
-output "alb_dns_name" {
-  description = "DNS name of the ALB"
-  value       = aws_lb.worker_alb.dns_name
-}
+# output "alb_dns_name" {
+#   description = "DNS name of the ALB"
+#   value       = aws_lb.worker_alb.dns_name
+# }

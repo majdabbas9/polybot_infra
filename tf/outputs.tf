@@ -13,7 +13,7 @@ output "sqs_queue_url_dev" {
 output "sqs_queue_url_prod" {
   value = module.k8s-cluster.prod_sqs_queue_url
 }
-output "alb_dns_name" {
-  description = "DNS name of the ALB"
-  value       = module.k8s-cluster.alb_dns_name
-}
+# output "alb_dns_name" {
+#   description = "DNS name of the ALB"
+#   value       = module.k8s-cluster.alb_dns_name
+# }
