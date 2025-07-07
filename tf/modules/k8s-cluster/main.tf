@@ -440,8 +440,8 @@ resource "aws_instance" "k8s_cp" {
   key_name                    = var.key_pair_name
   user_data = <<-EOF
     #!/bin/bash
-    exec > /var/log/user-data.log 2>&1
     set -eux
+    exec > /var/log/user-data.log 2>&1
 
     KUBERNETES_VERSION=v1.32
     echo "Reached k1" >> /var/log/k.txt
@@ -519,9 +519,8 @@ resource "aws_launch_template" "worker_lt" {
 
   user_data = base64encode(<<-EOF
     #!/bin/bash
-    exec > /var/log/worker-init.log 2>&1
     set -euxo pipefail
-
+    exec > /var/log/worker-init.log 2>&1
     apt-get update
     apt-get install -y curl jq unzip ebtables ethtool gpg apt-transport-https ca-certificates software-properties-common
 
