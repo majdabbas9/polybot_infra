@@ -651,7 +651,6 @@ resource "aws_autoscaling_group" "worker_asg" {
   tag {
     key                 = "Name"
     value               = "${var.username}_worker"
-    propagate_at_launch = true
   }
 
   lifecycle {
