@@ -360,7 +360,7 @@ resource "aws_lb_target_group" "worker_tg" {
   health_check {
     enabled             = true
     interval            = 30
-    path                = "/"
+    path                = "/healthz"
     protocol            = "HTTP"
     timeout             = 5
     healthy_threshold   = 2
