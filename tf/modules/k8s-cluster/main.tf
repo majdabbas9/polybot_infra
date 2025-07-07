@@ -645,7 +645,6 @@ resource "aws_autoscaling_group" "worker_asg" {
   launch_template {
     id      = aws_launch_template.worker_lt.id
     version = "$Latest"
-    propagate_at_launch = true
   }
   #target_group_arns = [aws_lb_target_group.worker_tg.arn]
   tag {
