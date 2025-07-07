@@ -52,7 +52,26 @@ else
   echo "Failed to initialize control plane after retries."
   exit 1
 fi
-sleep 240
+
+# Wait for at least one Ready worker node (not the control plane)
+for i in {1..60}; do  # 10 minutes max (60 * 10s)
+  READY_WORKERS=$(kubectl get nodes --no-headers 2>/dev/null | grep -v master | grep -v control-plane | grep -c " Ready")
+  if [ "$READY_WORKERS" -ge 1 ]; then
+    echo "✅ Worker node joined and is Ready!"
+    break
+  else
+    echo "⏳ Waiting for a worker node to join... ($i/60)"
+    sleep 10
+  fi
+done
+
+# Check again in case of timeout
+READY_WORKERS=$(kubectl get nodes --no-headers 2>/dev/null | grep -v master | grep -v control-plane | grep -c " Ready")
+if [ "$READY_WORKERS" -lt 1 ]; then
+  echo "❌ Timeout waiting for worker node to join."
+  exit 1
+fi
+
 # ✅ Install Calico if not already present
 if ! kubectl get pods -n kube-system | grep calico >/dev/null 2>&1; then
   kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.2/manifests/calico.yaml

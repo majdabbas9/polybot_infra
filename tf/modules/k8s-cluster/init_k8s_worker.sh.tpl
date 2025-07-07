@@ -55,8 +55,7 @@ done
 
 echo "[INFO] Ensuring AWS CLI is in PATH..."
 export PATH=$PATH:/usr/local/bin
-sleep 240
-for i in {1..5}; do
+for i in {1..60}; do
   echo "[INFO] Attempt $i: Fetching join command from SSM..."
   JOIN_CMD=$(/usr/local/bin/aws ssm get-parameter \
     --name "/k8s/worker/join-command-majd" \
@@ -64,7 +63,7 @@ for i in {1..5}; do
     --query "Parameter.Value" \
     --output text \
     --region "eu-west-1") && break
-  sleep 5
+  sleep 10
 done
 
 if [ -z "$JOIN_CMD" ]; then
