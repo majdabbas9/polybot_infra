@@ -75,15 +75,15 @@ jobs:
           chmod +x cp_init.sh
           scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
           ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
-      - name: deploy argoCD
-        working-directory: argoCD_apps
-        run: |
-          terraform init
-          terraform output -raw control_plane_public_ip > ip.txt
-          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-          chmod 600 key.pem
-          scp -i key.pem -o StrictHostKeyChecking=no app_for_apps.yaml ubuntu@$(cat ip.txt):~/app_for_apps.yaml
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "kubectl apply -f ~/app_for_apps.yaml"
+#      - name: deploy argoCD
+#        working-directory: argoCD_apps
+#        run: |
+#          terraform init
+#          terraform output -raw control_plane_public_ip > ip.txt
+#          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+#          chmod 600 key.pem
+#          scp -i key.pem -o StrictHostKeyChecking=no app_for_apps.yaml ubuntu@$(cat ip.txt):~/app_for_apps.yaml
+#          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "kubectl apply -f ~/app_for_apps.yaml"
 #
 #
 #      - name: depoly polybot_dev
