@@ -640,7 +640,7 @@ resource "aws_autoscaling_group" "worker_asg" {
   vpc_zone_identifier       = module.polybot_service_vpc.public_subnets
   health_check_type         = "EC2"
   health_check_grace_period = 300
-  #target_group_arns         = [aws_lb_target_group.worker_tg.arn]
+  target_group_arns         = [aws_lb_target_group.worker_tg.arn]
 
   launch_template {
     id      = aws_launch_template.worker_lt.id
@@ -862,19 +862,55 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_instance_policy" {
   policy_arn = aws_iam_policy.ssm_instance_policy.arn
 }
 #--------------------------------------------------------- terminating ec2 instance life hook-----------------------------------
-# resource "aws_autoscaling_lifecycle_hook" "worker_termination_hook" {
-#   name                   = "pause-on-termination"
-#   autoscaling_group_name = aws_autoscaling_group.worker_asg.name
-#   lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
-#   heartbeat_timeout      = 300         # Pause for 5 minutes
-#   default_result         = "CONTINUE"  # If Lambda/SSM fails
-#   notification_target_arn = aws_sns_topic.asg_notifications.arn
-#   role_arn               = aws_iam_role.asg_lifecycle_role.arn
-# }
-# resource "aws_sns_topic_subscription" "email_notify" {
-#   topic_arn = aws_sns_topic.asg_notifications.arn
-#   protocol  = "email"
-#   endpoint  = "majd.abbas999@gmail.com"  # Replace with your email
-# }
+resource "aws_sns_topic" "asg_notification_2" {
+  name = "${var.username}_asg_notifications"
+}
+
+resource "aws_iam_role" "asg_lifecycle_role_2" {
+  name = "${var.username}_asg_lifecycle_role_2"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "autoscaling.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "asg_lifecycle_policy_2" {
+  name = "${var.username}_asg_lifecycle_policy_2"
+  role = aws_iam_role.asg_lifecycle_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "sns:Publish"
+      ]
+      Resource = aws_sns_topic.asg_notification_2.arn
+    }]
+  })
+}
+
+resource "aws_autoscaling_lifecycle_hook" "worker_termination_hook" {
+  name                   = "pause-on-termination"
+  autoscaling_group_name = aws_autoscaling_group.worker_asg.name
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
+  heartbeat_timeout      = 300         # Pause for 5 minutes
+  default_result         = "CONTINUE"  # If Lambda/SSM fails
+  notification_target_arn = aws_sns_topic.asg_notification_2.arn
+  role_arn               = aws_iam_role.asg_lifecycle_role.arn
+}
+
+resource "aws_sns_topic_subscription" "email_notify" {
+  topic_arn = aws_sns_topic.asg_notification_2.arn
+  protocol  = "email"
+  endpoint  = "majd.abbas999@gmail.com"  # Replace with your email
+}
 
 
