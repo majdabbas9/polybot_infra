@@ -330,104 +330,104 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 #--------------------------------------------------------- load balancer-----------------------------------
-resource "aws_security_group" "lb_sg" {
-  name        = "alb-sg"
-  description = "Allow HTTPS traffic to ALB"
-  vpc_id      = module.polybot_service_vpc.vpc_id
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_lb_target_group" "worker_tg" {
-  name        = "${var.username}-tg"
-  port        = 31080                # NodePort
-  protocol    = "HTTP"
-  vpc_id      = module.polybot_service_vpc.vpc_id
-  target_type = "instance"
-
-  health_check {
-    enabled             = true
-    interval            = 30
-    path                = "/healthz"
-    protocol            = "HTTP"
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-}
-
-resource "aws_lb" "worker_alb" {
-  name               = "${var.username}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  subnets            = module.polybot_service_vpc.public_subnets
-  security_groups    = [aws_security_group.lb_sg.id]
-}
-# Lookup the hosted zone for fursa.click
-data "aws_route53_zone" "main_zone" {
-  name         = "fursa.click"
-  private_zone = false
-}
-
-# Create A record for majd.app.fursa.click -> ALB
-resource "aws_route53_record" "majd_subdomain" {
-  zone_id = data.aws_route53_zone.main_zone.zone_id
-  name    = "majd.app"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.worker_alb.dns_name
-    zone_id                = aws_lb.worker_alb.zone_id
-    evaluate_target_health = true
-  }
-}
-
-resource "aws_acm_certificate" "majd_cert" {
-  domain_name       = "majd.app.fursa.click"
-  validation_method = "DNS"
-
-  tags = {
-    Name = "majd.app.fursa.click Cert"
-  }
-}
-
-resource "aws_route53_record" "majd_cert_validation" {
-  name    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_name
-  type    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_type
-  zone_id = data.aws_route53_zone.main_zone.zone_id
-  records = [tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_value]
-  ttl     = 300
-}
-
-resource "aws_acm_certificate_validation" "majd_cert_validation" {
-  certificate_arn         = aws_acm_certificate.majd_cert.arn
-  validation_record_fqdns = [aws_route53_record.majd_cert_validation.fqdn]
-}
-
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.worker_alb.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = aws_acm_certificate_validation.majd_cert_validation.certificate_arn
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.worker_tg.arn  # your existing target group
-  }
-}
+# resource "aws_security_group" "lb_sg" {
+#   name        = "alb-sg"
+#   description = "Allow HTTPS traffic to ALB"
+#   vpc_id      = module.polybot_service_vpc.vpc_id
+#
+#   ingress {
+#     from_port   = 443
+#     to_port     = 443
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+#
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+# }
+#
+# resource "aws_lb_target_group" "worker_tg" {
+#   name        = "${var.username}-tg"
+#   port        = 31080                # NodePort
+#   protocol    = "HTTP"
+#   vpc_id      = module.polybot_service_vpc.vpc_id
+#   target_type = "instance"
+#
+#   health_check {
+#     enabled             = true
+#     interval            = 30
+#     path                = "/healthz"
+#     protocol            = "HTTP"
+#     timeout             = 5
+#     healthy_threshold   = 2
+#     unhealthy_threshold = 2
+#   }
+# }
+#
+# resource "aws_lb" "worker_alb" {
+#   name               = "${var.username}-alb"
+#   internal           = false
+#   load_balancer_type = "application"
+#   subnets            = module.polybot_service_vpc.public_subnets
+#   security_groups    = [aws_security_group.lb_sg.id]
+# }
+# # Lookup the hosted zone for fursa.click
+# data "aws_route53_zone" "main_zone" {
+#   name         = "fursa.click"
+#   private_zone = false
+# }
+#
+# # Create A record for majd.app.fursa.click -> ALB
+# resource "aws_route53_record" "majd_subdomain" {
+#   zone_id = data.aws_route53_zone.main_zone.zone_id
+#   name    = "majd.app"
+#   type    = "A"
+#
+#   alias {
+#     name                   = aws_lb.worker_alb.dns_name
+#     zone_id                = aws_lb.worker_alb.zone_id
+#     evaluate_target_health = true
+#   }
+# }
+#
+# resource "aws_acm_certificate" "majd_cert" {
+#   domain_name       = "majd.app.fursa.click"
+#   validation_method = "DNS"
+#
+#   tags = {
+#     Name = "majd.app.fursa.click Cert"
+#   }
+# }
+#
+# resource "aws_route53_record" "majd_cert_validation" {
+#   name    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_name
+#   type    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_type
+#   zone_id = data.aws_route53_zone.main_zone.zone_id
+#   records = [tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_value]
+#   ttl     = 300
+# }
+#
+# resource "aws_acm_certificate_validation" "majd_cert_validation" {
+#   certificate_arn         = aws_acm_certificate.majd_cert.arn
+#   validation_record_fqdns = [aws_route53_record.majd_cert_validation.fqdn]
+# }
+#
+# resource "aws_lb_listener" "https" {
+#   load_balancer_arn = aws_lb.worker_alb.arn
+#   port              = 443
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   certificate_arn   = aws_acm_certificate_validation.majd_cert_validation.certificate_arn
+#
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.worker_tg.arn  # your existing target group
+#   }
+# }
 #--------------------------------------------------------- k8s cluster-----------------------------------
 # This EC2 instance serves as the Kubernetes control plane (CP).
 resource "aws_instance" "k8s_cp" {
@@ -438,7 +438,7 @@ resource "aws_instance" "k8s_cp" {
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
-  user_data                   = file("${path.module}/init_k8s_cp.sh")
+  # user_data                   = file("${path.module}/init_k8s_cp.sh")
 
   tags = {
     Name = "${var.username}-k8s-cp"
@@ -468,10 +468,7 @@ resource "aws_launch_template" "worker_lt" {
     }
   }
 
-  user_data = base64encode(templatefile("${path.module}/init_k8s_worker.sh.tpl", {
-    region      = var.region,
-    secret_name = "kubeadm-join-command"
-  }))
+  #user_data = base64encode(templatefile("${path.module}/init_k8s_worker.sh.tpl", {region      = var.region, secret_name = "kubeadm-join-command" }))
 }
 
 # This Auto Scaling Group (ASG) manages the worker nodes in the Kubernetes cluster.
@@ -488,7 +485,7 @@ resource "aws_autoscaling_group" "worker_asg" {
     id      = aws_launch_template.worker_lt.id
     version = "$Latest"
   }
-  target_group_arns = [aws_lb_target_group.worker_tg.arn]
+  #target_group_arns = [aws_lb_target_group.worker_tg.arn]
   tag {
     key                 = "Name"
     value               = "${var.username}_worker"
@@ -501,206 +498,206 @@ resource "aws_autoscaling_group" "worker_asg" {
 }
 
 #--------------------------------------------------------- Join use (Lambda + Lifecycle Hook + SNS + SSM)-----------------------------------
-resource "aws_sns_topic" "asg_notifications" {
-  name = "${var.username}-worker-asg-lifecycle"
-}
-
-resource "aws_iam_role" "asg_lifecycle_role" {
-  name = "${var.username}-asg-lifecycle-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action    = "sts:AssumeRole",
-      Principal = { Service = "autoscaling.amazonaws.com" },
-      Effect    = "Allow"
-    }]
-  })
-}
-
-resource "aws_autoscaling_lifecycle_hook" "worker_join_hook" {
-  name                   = "${var.username}-worker-join-hook"
-  autoscaling_group_name = aws_autoscaling_group.worker_asg.name
-  lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
-  default_result         = "CONTINUE"
-  heartbeat_timeout      = 600
-  notification_target_arn = aws_sns_topic.asg_notifications.arn
-  role_arn               = aws_iam_role.asg_lifecycle_role.arn
-}
-
-resource "aws_iam_role_policy" "asg_sns" {
-  role = aws_iam_role.asg_lifecycle_role.name
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect   = "Allow",
-      Action   = "sns:Publish",
-      Resource = aws_sns_topic.asg_notifications.arn
-    }]
-  })
-}
-
-resource "aws_iam_role" "lambda_exec_role" {
-  name = "${var.username}-lambda-worker-join"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect    = "Allow",
-      Principal = { Service = "lambda.amazonaws.com" },
-      Action    = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "lambda_policy" {
-  role = aws_iam_role.lambda_exec_role.name
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "ssm:DescribeInstanceInformation",
-          "ssm:GetCommandInvocation",
-          "ssm:SendCommand",
-          "ssm:ListCommands",
-          "ssm:UpdateInstanceInformation",
-          "ssmmessages:*",
-          "ec2messages:*",
-          "ssm:GetParameter",
-          "ssm:PutParameter"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "ec2:DescribeInstances"  # 🔑 REQUIRED for control-plane lookup
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "autoscaling:CompleteLifecycleAction"  # 🔄 REQUIRED to end lifecycle
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_lambda_function" "worker_join_lambda" {
-  filename         = "lambda_payload.zip"
-  function_name    = "worker-auto-join"
-  role             = aws_iam_role.lambda_exec_role.arn
-  handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.12"
-  timeout          = 60
-  environment {
-    variables = {
-      REGION = var.region
-    }
-  }
-}
-
-resource "aws_lambda_permission" "sns_invoke" {
-  statement_id  = "AllowSNS"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.worker_join_lambda.function_name
-  principal     = "sns.amazonaws.com"
-  source_arn    = aws_sns_topic.asg_notifications.arn
-}
-
-resource "aws_sns_topic_subscription" "sub" {
-  topic_arn = aws_sns_topic.asg_notifications.arn
-  protocol  = "lambda"
-  endpoint  = aws_lambda_function.worker_join_lambda.arn
-}
-
-resource "aws_iam_policy" "ssm_logs_policy" {
-  name = "${var.username}_ssm_logs_policy"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "ssm:DescribeInstanceInformation",
-          "ssm:GetCommandInvocation",
-          "ssm:SendCommand",
-          "ssm:ListCommands"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "attach_ssm_logs" {
-  role       = aws_iam_role.polybot_role.name
-  policy_arn = aws_iam_policy.ssm_logs_policy.arn
-}
-
-resource "aws_iam_policy" "ssm_instance_policy" {
-  name        = "${var.username}_ssm_instance_policy"
-  description = "Allow EC2 instances to work with SSM"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "ssm:DescribeAssociation",
-          "ssm:GetDeployablePatchSnapshotForInstance",
-          "ssm:GetDocument",
-          "ssm:DescribeDocument",
-          "ssm:GetManifest",
-          "ssm:GetParameter",
-          "ssm:GetParameters",
-          "ssm:ListAssociations",
-          "ssm:ListInstanceAssociations",
-          "ssm:PutInventory",
-          "ssm:PutComplianceItems",
-          "ssm:PutConfigurePackageResult",
-          "ssm:UpdateAssociationStatus",
-          "ssm:UpdateInstanceAssociationStatus",
-          "ssm:UpdateInstanceInformation",
-          "ssmmessages:*",
-          "ssm:PutParameter",
-          "ec2messages:*",
-          "cloudwatch:PutMetricData",
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "attach_ssm_instance_policy" {
-  role       = aws_iam_role.polybot_role.name
-  policy_arn = aws_iam_policy.ssm_instance_policy.arn
-}
+# resource "aws_sns_topic" "asg_notifications" {
+#   name = "${var.username}-worker-asg-lifecycle"
+# }
+#
+# resource "aws_iam_role" "asg_lifecycle_role" {
+#   name = "${var.username}-asg-lifecycle-role"
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Action    = "sts:AssumeRole",
+#       Principal = { Service = "autoscaling.amazonaws.com" },
+#       Effect    = "Allow"
+#     }]
+#   })
+# }
+#
+# resource "aws_autoscaling_lifecycle_hook" "worker_join_hook" {
+#   name                   = "${var.username}-worker-join-hook"
+#   autoscaling_group_name = aws_autoscaling_group.worker_asg.name
+#   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
+#   default_result         = "CONTINUE"
+#   heartbeat_timeout      = 600
+#   notification_target_arn = aws_sns_topic.asg_notifications.arn
+#   role_arn               = aws_iam_role.asg_lifecycle_role.arn
+# }
+#
+# resource "aws_iam_role_policy" "asg_sns" {
+#   role = aws_iam_role.asg_lifecycle_role.name
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Effect   = "Allow",
+#       Action   = "sns:Publish",
+#       Resource = aws_sns_topic.asg_notifications.arn
+#     }]
+#   })
+# }
+#
+# resource "aws_iam_role" "lambda_exec_role" {
+#   name = "${var.username}-lambda-worker-join"
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Effect    = "Allow",
+#       Principal = { Service = "lambda.amazonaws.com" },
+#       Action    = "sts:AssumeRole"
+#     }]
+#   })
+# }
+#
+# resource "aws_iam_role_policy" "lambda_policy" {
+#   role = aws_iam_role.lambda_exec_role.name
+#
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ssm:DescribeInstanceInformation",
+#           "ssm:GetCommandInvocation",
+#           "ssm:SendCommand",
+#           "ssm:ListCommands",
+#           "ssm:UpdateInstanceInformation",
+#           "ssmmessages:*",
+#           "ec2messages:*",
+#           "ssm:GetParameter",
+#           "ssm:PutParameter"
+#         ],
+#         Resource = "*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "logs:CreateLogGroup",
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents"
+#         ],
+#         Resource = "*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ec2:DescribeInstances"  # 🔑 REQUIRED for control-plane lookup
+#         ],
+#         Resource = "*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "autoscaling:CompleteLifecycleAction"  # 🔄 REQUIRED to end lifecycle
+#         ],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
+#
+# resource "aws_lambda_function" "worker_join_lambda" {
+#   filename         = "lambda_payload.zip"
+#   function_name    = "worker-auto-join"
+#   role             = aws_iam_role.lambda_exec_role.arn
+#   handler          = "lambda_function.lambda_handler"
+#   runtime          = "python3.12"
+#   timeout          = 60
+#   environment {
+#     variables = {
+#       REGION = var.region
+#     }
+#   }
+# }
+#
+# resource "aws_lambda_permission" "sns_invoke" {
+#   statement_id  = "AllowSNS"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.worker_join_lambda.function_name
+#   principal     = "sns.amazonaws.com"
+#   source_arn    = aws_sns_topic.asg_notifications.arn
+# }
+#
+# resource "aws_sns_topic_subscription" "sub" {
+#   topic_arn = aws_sns_topic.asg_notifications.arn
+#   protocol  = "lambda"
+#   endpoint  = aws_lambda_function.worker_join_lambda.arn
+# }
+#
+# resource "aws_iam_policy" "ssm_logs_policy" {
+#   name = "${var.username}_ssm_logs_policy"
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ssm:DescribeInstanceInformation",
+#           "ssm:GetCommandInvocation",
+#           "ssm:SendCommand",
+#           "ssm:ListCommands"
+#         ],
+#         Resource = "*"
+#       },
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "logs:CreateLogGroup",
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents"
+#         ],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
+#
+# resource "aws_iam_role_policy_attachment" "attach_ssm_logs" {
+#   role       = aws_iam_role.polybot_role.name
+#   policy_arn = aws_iam_policy.ssm_logs_policy.arn
+# }
+#
+# resource "aws_iam_policy" "ssm_instance_policy" {
+#   name        = "${var.username}_ssm_instance_policy"
+#   description = "Allow EC2 instances to work with SSM"
+#
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ssm:DescribeAssociation",
+#           "ssm:GetDeployablePatchSnapshotForInstance",
+#           "ssm:GetDocument",
+#           "ssm:DescribeDocument",
+#           "ssm:GetManifest",
+#           "ssm:GetParameter",
+#           "ssm:GetParameters",
+#           "ssm:ListAssociations",
+#           "ssm:ListInstanceAssociations",
+#           "ssm:PutInventory",
+#           "ssm:PutComplianceItems",
+#           "ssm:PutConfigurePackageResult",
+#           "ssm:UpdateAssociationStatus",
+#           "ssm:UpdateInstanceAssociationStatus",
+#           "ssm:UpdateInstanceInformation",
+#           "ssmmessages:*",
+#           "ssm:PutParameter",
+#           "ec2messages:*",
+#           "cloudwatch:PutMetricData",
+#           "logs:CreateLogGroup",
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents"
+#         ],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
+#
+# resource "aws_iam_role_policy_attachment" "attach_ssm_instance_policy" {
+#   role       = aws_iam_role.polybot_role.name
+#   policy_arn = aws_iam_policy.ssm_instance_policy.arn
+# }
 
