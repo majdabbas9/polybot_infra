@@ -171,56 +171,76 @@ module "polybot_service_vpc" {
   }
 }
 
-resource "aws_security_group" "cp" {
+resource "aws_security_group" "cp_SG" {
   name        = "cp-sg"
   description = "Control plane security group"
   vpc_id      = module.polybot_service_vpc.vpc_id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 }
 
-resource "aws_security_group" "node" {
+resource "aws_security_group_rule" "cp_allow_ssh" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.cp_SG.id
+  description       = "Allow SSH to control plane"
+}
+
+resource "aws_security_group_rule" "cp_allow_http" {
+  type              = "ingress"
+  from_port         = 8080
+  to_port           = 8080
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.cp_SG.id
+  description       = "Allow HTTP to control plane"
+}
+
+resource "aws_security_group_rule" "cp_allow_egress" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.cp_SG.id
+  description       = "Allow all outbound from control plane"
+}
+
+resource "aws_security_group" "node_SG" {
   name        = "node-sg"
   description = "Worker nodes security group"
   vpc_id      = module.polybot_service_vpc.vpc_id
+}
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port       = 31080
-    to_port         = 31080
-    protocol        = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+resource "aws_security_group_rule" "node_allow_ssh" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.node_SG.id
+  description       = "Allow SSH to node"
+}
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+resource "aws_security_group_rule" "node_allow_nodeport" {
+  type              = "ingress"
+  from_port         = 31080
+  to_port           = 31080
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.node_SG.id
+  description       = "Allow NodePort access to node"
+}
+
+resource "aws_security_group_rule" "node_allow_egress" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.node_SG.id
+  description       = "Allow all outbound from node"
 }
 
 resource "aws_security_group_rule" "cp_allow_node_k8s_api" {
@@ -228,8 +248,8 @@ resource "aws_security_group_rule" "cp_allow_node_k8s_api" {
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
-  security_group_id        = aws_security_group.cp.id
-  source_security_group_id = aws_security_group.node.id
+  security_group_id        = aws_security_group.cp_SG.id
+  source_security_group_id = aws_security_group.node_SG.id
   description              = "Allow all traffic from workers"
 }
 
@@ -238,8 +258,8 @@ resource "aws_security_group_rule" "node_allow_cp_all" {
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
-  security_group_id        = aws_security_group.node.id
-  source_security_group_id = aws_security_group.cp.id
+  security_group_id        = aws_security_group.node_SG.id
+  source_security_group_id = aws_security_group.cp_SG.id
   description              = "Allow all traffic from control plane"
 }
 
@@ -434,7 +454,7 @@ resource "aws_instance" "k8s_cp" {
   ami                         = var.ami # Ubuntu 22.04 LTS (us-east-1)
   instance_type               = "t2.medium"
   subnet_id                   = module.polybot_service_vpc.public_subnets[0]
-  vpc_security_group_ids      = [aws_security_group.cp.id]
+  vpc_security_group_ids      = [aws_security_group.cp_SG.id]
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
@@ -530,7 +550,7 @@ resource "aws_launch_template" "worker_lt" {
 
   network_interfaces {
     associate_public_ip_address = true
-    security_groups             = [aws_security_group.node.id]
+    security_groups             = [aws_security_group.node_SG.id]
   }
 
   tag_specifications {
@@ -620,10 +640,12 @@ resource "aws_autoscaling_group" "worker_asg" {
   vpc_zone_identifier       = module.polybot_service_vpc.public_subnets
   health_check_type         = "EC2"
   health_check_grace_period = 300
+  target_group_arns         = [aws_lb_target_group.worker_tg.arn]
 
   launch_template {
     id      = aws_launch_template.worker_lt.id
     version = "$Latest"
+    propagate_at_launch = true
   }
   #target_group_arns = [aws_lb_target_group.worker_tg.arn]
   tag {
@@ -840,4 +862,20 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_instance_policy" {
   role       = aws_iam_role.polybot_role.name
   policy_arn = aws_iam_policy.ssm_instance_policy.arn
 }
+#--------------------------------------------------------- terminating ec2 instance life hook-----------------------------------
+resource "aws_autoscaling_lifecycle_hook" "worker_termination_hook" {
+  name                   = "pause-on-termination"
+  autoscaling_group_name = aws_autoscaling_group.worker_asg.name
+  lifecycle_transition   = "autoscaling:EC2_INSTANCE_TERMINATING"
+  heartbeat_timeout      = 300         # Pause for 5 minutes
+  default_result         = "CONTINUE"  # If Lambda/SSM fails
+  notification_target_arn = aws_sns_topic.asg_notifications.arn
+  role_arn               = aws_iam_role.asg_lifecycle_role.arn
+}
+resource "aws_sns_topic_subscription" "email_notify" {
+  topic_arn = aws_sns_topic.asg_notifications.arn
+  protocol  = "email"
+  endpoint  = "majd.abbas999@gmail.com"  # Replace with your email
+}
+
 
