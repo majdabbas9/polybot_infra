@@ -209,8 +209,8 @@ resource "aws_security_group" "node" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    from_port       = 30001
-    to_port         = 30001
+    from_port       = 31080
+    to_port         = 31080
     protocol        = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -352,8 +352,8 @@ resource "aws_security_group" "lb_sg" {
 
 resource "aws_lb_target_group" "worker_tg" {
   name        = "${var.username}-tg"
-  port        = 30001                # NodePort
-  protocol    = "HTTPS"
+  port        = 31080                # NodePort
+  protocol    = "HTTP"
   vpc_id      = module.polybot_service_vpc.vpc_id
   target_type = "instance"
 
@@ -361,7 +361,7 @@ resource "aws_lb_target_group" "worker_tg" {
     enabled             = true
     interval            = 30
     path                = "/"
-    protocol            = "HTTPS"
+    protocol            = "HTTP"
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
