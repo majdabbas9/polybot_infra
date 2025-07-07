@@ -69,18 +69,17 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
           chmod 600 key.pem
 
-      - name: Copy and Run Init Script on Control Plane
-        working-directory: tf
-        run: |
-          chmod +x cp_init.sh
-          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
-#      - name: deploy argoCD
-#        working-directory: argoCD_apps
+#      - name: Copy and Run Init Script on Control Plane
+#        working-directory: tf
 #        run: |
-#          chmod +x app_for_apps.yaml
-#          scp -i key.pem -o StrictHostKeyChecking=no app_for_apps.yaml ubuntu@$(cat ip.txt):~/app_for_apps.yaml
-#          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/app_for_apps.yaml && kubectl apply -f ~/app_for_apps.yaml"
+#          chmod +x cp_init.sh
+#          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
+#          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
+      - name: deploy argoCD
+        working-directory: argoCD_apps
+        run: |
+          scp -i key.pem -o StrictHostKeyChecking=no app_for_apps.yaml ubuntu@$(cat ip.txt):~/app_for_apps.yaml
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "kubectl apply -f ~/app_for_apps.yaml"
 #
 #
 #      - name: depoly polybot_dev
