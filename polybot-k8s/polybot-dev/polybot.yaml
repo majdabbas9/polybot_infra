@@ -15,15 +15,8 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - image: majdabbas99/polybot_build_dev:189
+      - image: majdabbas99/polybot_build_dev:190
         name: polybot-container
-      resources:
-        requests:
-          memory: "256Mi"
-          cpu: "250m"
-        limits:
-          memory: "512Mi"
-          cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
@@ -33,5 +26,5 @@ spec:
   selector:
     app: polybot-dev
   ports:
-    - port: 8443         # Internal port (what Ingress sees)
+    - port: 8080         # Internal port (what Ingress sees)
       targetPort: 8443   # Your app's container port
