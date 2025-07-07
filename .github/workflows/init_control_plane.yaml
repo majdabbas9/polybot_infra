@@ -63,18 +63,18 @@ jobs:
           echo "Running Python script with extracted values..."
           python3 save_secrets.py $TELEGRAM_TOKEN_DEV $TELEGRAM_TOKEN "$DEV_BUCKET_ID" "$PROD_BUCKET_ID" "$DEV_SQS_URL" "$PROD_SQS_URL"
 
-      - name: Save EC2 SSH key
-        working-directory: tf
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-          chmod 600 key.pem
-
-      - name: Copy and Run Init Script on Control Plane
-        working-directory: tf
-        run: |
-          chmod +x cp_init.sh
-          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
+#      - name: Save EC2 SSH key
+#        working-directory: tf
+#        run: |
+#          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+#          chmod 600 key.pem
+#
+#      - name: Copy and Run Init Script on Control Plane
+#        working-directory: tf
+#        run: |
+#          chmod +x cp_init.sh
+#          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
+#          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
 #      - name: deploy argoCD
 #        working-directory: argoCD_apps
 #        run: |
