@@ -1,8 +1,6 @@
 #!/bin/bash
-set -eux
-
-#!/bin/bash
-echo "Done!"
+set -euo pipefail
+set -x
 # ✅ Exit early if control plane is already initialized
 if [ -f /etc/kubernetes/admin.conf ]; then
   echo "[INFO] Kubernetes control plane already initialized. Exiting."
@@ -10,12 +8,12 @@ if [ -f /etc/kubernetes/admin.conf ]; then
 fi
 
 # Run directly on the EC2 control plane — no SSH inside
-for i in {1..30}; do
+for i in {1..60}; do
   if command -v kubeadm >/dev/null 2>&1; then
     echo "kubeadm found!"
     break
   else
-    echo "Waiting for kubeadm to be installed... ($i/30)"
+    echo "Waiting for kubeadm to be installed... ($i/60)"
     sleep 5
   fi
 done
@@ -86,11 +84,25 @@ else
   echo "NGINX Ingress already installed, skipping."
 fi
 
+# -------------------------------
+# Argo CD Helm Installation Vars
+# -------------------------------
 NAMESPACE="argocd"
-ARGOCD_DEPLOYMENT="argocd-server"
-MANIFEST_URL="https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
+RELEASE_NAME="argocd"
+ARGOCD_HELM_REPO="https://argoproj.github.io/argo-helm"
+ARGOCD_HELM_CHART="argo-cd"
 
-# Step 1: Create the namespace if it doesn't exist
+# -------------------------------
+# Ingress-NGINX Installation Vars
+# -------------------------------
+INGRESS_NAMESPACE="ingress-nginx"
+INGRESS_RELEASE="nginx-ingress"
+HTTP_PORT=31080
+HTTPS_PORT=30001
+
+# -------------------------------
+# Step 1: Create Argo CD Namespace
+# -------------------------------
 if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
   echo "🔧 Creating namespace $NAMESPACE..."
   kubectl create namespace "$NAMESPACE"
@@ -98,38 +110,51 @@ else
   echo "✅ Namespace $NAMESPACE already exists."
 fi
 
-# Step 2: Check if Argo CD is already installed (based on a known deployment)
-if ! kubectl get deployment "$ARGOCD_DEPLOYMENT" -n "$NAMESPACE" > /dev/null 2>&1; then
-  echo "🚀 Installing Argo CD in $NAMESPACE..."
-  kubectl apply -n "$NAMESPACE" -f "$MANIFEST_URL"
-else
-  echo "✅ Argo CD is already installed in $NAMESPACE."
-fi
-
-# Check if helm is installed
+# -------------------------------
+# Step 2: Check and Install Helm
+# -------------------------------
 if ! command -v helm &> /dev/null; then
-  echo "Helm not found, installing Helm..."
+  echo "❌ Helm not found. Installing Helm..."
   curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 else
-  echo "Helm is already installed."
+  echo "✅ Helm is already installed."
 fi
 
-# Verify helm installation
+# Verify Helm installation
+echo "🔍 Verifying Helm version..."
 helm version
 
-# Add ingress-nginx repo
-echo "Adding ingress-nginx Helm repo..."
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+# -------------------------------
+# Step 3: Add and Update Helm Repos
+# -------------------------------
+echo "📦 Adding Argo CD and Ingress-NGINX Helm repositories..."
+helm repo add argo "$ARGOCD_HELM_REPO" || true
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
 
-# Update Helm repos
-echo "Updating Helm repos..."
+echo "🔄 Updating Helm repositories..."
 helm repo update
 
-# Install nginx ingress with NodePort 31080 (HTTP) and 30001 (HTTPS)
-echo "Installing nginx ingress controller..."
-helm install nginx-ingress ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace \
-  --set controller.service.type=NodePort \
-  --set controller.service.nodePorts.http=31080 \
-  --set controller.service.nodePorts.https=30001
+# -------------------------------
+# Step 4: Install Argo CD
+# -------------------------------
+if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+  echo "🚀 Installing Argo CD via Helm into namespace $NAMESPACE..."
+  helm install "$RELEASE_NAME" argo/"$ARGOCD_HELM_CHART" -n "$NAMESPACE"
+else
+  echo "✅ Argo CD Helm release '$RELEASE_NAME' already exists in namespace $NAMESPACE."
+fi
+
+# -------------------------------
+# Step 5: Install Ingress-NGINX with NodePorts
+# -------------------------------
+if ! helm status "$INGRESS_RELEASE" -n "$INGRESS_NAMESPACE" > /dev/null 2>&1; then
+  echo "🌐 Installing Ingress-NGINX controller on NodePorts $HTTP_PORT/$HTTPS_PORT..."
+  helm install "$INGRESS_RELEASE" ingress-nginx/ingress-nginx \
+    --namespace "$INGRESS_NAMESPACE" --create-namespace \
+    --set controller.service.type=NodePort \
+    --set controller.service.nodePorts.http="$HTTP_PORT" \
+    --set controller.service.nodePorts.https="$HTTPS_PORT"
+else
+  echo "✅ Ingress-NGINX Helm release '$INGRESS_RELEASE' already exists in namespace $INGRESS_NAMESPACE."
+fi
 

@@ -63,7 +63,7 @@ for i in {1..60}; do
     --query "Parameter.Value" \
     --output text \
     --region "eu-west-1") && break
-  sleep 10
+  sleep 5
 done
 
 if [ -z "$JOIN_CMD" ]; then
