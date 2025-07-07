@@ -460,6 +460,7 @@ resource "aws_instance" "k8s_cp" {
 
     cat <<EOT | tee /etc/sysctl.d/k8s.conf
     net.ipv4.ip_forward = 1
+    net.bridge.bridge-nf-call-iptables = 1
     EOT
 
     sysctl --system
@@ -485,7 +486,29 @@ resource "aws_instance" "k8s_cp" {
     swapoff -a
     (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab -
 
-    echo "Finished successfully" >> /var/log/k.txt
+    echo "Finished setup" >> /var/log/k.txt
+
+    # Run kubeadm init and configure cluster only if not already done
+    if [ ! -f /etc/kubernetes/admin.conf ]; then
+      kubeadm init --pod-network-cidr=10.244.0.0/16
+
+      mkdir -p /home/ubuntu/.kube
+      cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+      chown ubuntu:ubuntu /home/ubuntu/.kube/config
+
+      # Install Flannel CNI
+      su - ubuntu -c "kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+
+      TOKEN=$(kubeadm token create --ttl 48h --print-join-command)
+      aws ssm put-parameter \
+        --name "/k8s/worker/join-command-majd" \
+        --value "$TOKEN" \
+        --type "SecureString" \
+        --overwrite \
+        --region "eu-west-1"
+
+    fi
+    echo "Cluster init completed" >> /var/log/k.txt
   EOF
 
 
