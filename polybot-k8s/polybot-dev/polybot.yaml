@@ -16,7 +16,7 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - image: majdabbas99/polybot_dev:210
+      - image: ghcr.io/majdabbas9/telegram_bot_images:217
         name: polybot-container
         env:
           - name: TELEGRAM_BOT_TOKEN
