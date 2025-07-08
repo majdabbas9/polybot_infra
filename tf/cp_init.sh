@@ -1,12 +1,10 @@
 #!/bin/bash
 exec > >(tee -a setup.log) 2>&1
 set -euxo pipefail
-TELEGRAM_TOKEN_DEV="$1"
-TELEGRAM_TOKEN="$2"
-DEV_BUCKET_ID="$3"
-PROD_BUCKET_ID="$4"
-DEV_SQS_URL="$5"
-PROD_SQS_URL="$6"
+echo "DEV_BUCKET_ID: $DEV_BUCKET_ID"
+echo "PROD_BUCKET_ID: $PROD_BUCKET_ID"
+echo "DEV_SQS_URL: $DEV_SQS_URL"
+echo "PROD_SQS_URL: $PROD_SQS_URL"
 
 kubectl create secret generic my-secrets \
   --from-literal=TELEGRAM_TOKEN_DEV="$TELEGRAM_TOKEN_DEV" \
