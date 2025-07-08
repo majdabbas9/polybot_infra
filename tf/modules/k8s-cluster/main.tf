@@ -602,11 +602,11 @@ resource "aws_launch_template" "worker_lt" {
     security_groups             = [aws_security_group.node_SG.id]
   }
   block_device_mappings {
-    device_name = "/dev/xvda"  # This is typically the root device for Amazon Linux/Ubuntu
+    device_name = "/dev/sdf"  # This is typically the root device for Amazon Linux/Ubuntu
 
     ebs {
       volume_size = 20         # Size in GiB
-      volume_type = "gp2"      # General Purpose SSD
+      volume_type = "gp3"      # General Purpose SSD
       delete_on_termination = true
     }
   }
