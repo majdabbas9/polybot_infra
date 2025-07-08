@@ -8,9 +8,6 @@ PROD_BUCKET_ID="$4"
 DEV_SQS_URL="$5"
 PROD_SQS_URL="$6"
 
-# Create or update the k8s secret named "my-secrets"
-kubectl delete secret my-secrets --ignore-not-found
-
 kubectl create secret generic my-secrets \
   --from-literal=TELEGRAM_TOKEN_DEV="$TELEGRAM_TOKEN_DEV" \
   --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
