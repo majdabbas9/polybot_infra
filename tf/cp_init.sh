@@ -72,22 +72,23 @@ helm repo add argo https://argoproj.github.io/argo-helm || true
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
-if ! helm status argocd -n argocd > /dev/null 2>&1; then
-  echo "🚀 Installing Argo CD via Helm into namespace argocd..."
-  helm install argocd argo/argo-cd --namespace argocd
+# Check and install Argo CD Helm release
+if helm list -n argocd | grep -qw argocd; then
+  echo "Argo CD Helm release 'argocd' already exists in 'argocd', skipping."
 else
-  echo "✅ Argo CD Helm release 'argocd' already exists in namespace argocd."
+  echo "Installing Argo CD Helm release 'argocd'..."
+  helm install argocd argo/argo-cd --namespace argocd
 fi
 
 # Install Ingress NGINX Helm chart
-if ! helm status "ingress-nginx" -n "ingress-nginx" > /dev/null 2>&1; then
-  echo "🌐 Installing Ingress-NGINX controller on NodePorts $HTTP_PORT/$HTTPS_PORT..."
-  helm install "ingress-nginx" ingress-nginx/ingress-nginx \
-    --namespace "ingress-nginx" --create-namespace \
+if helm list -n ingress-nginx | grep -qw ingress-nginx; then
+  echo "Ingress-NGINX Helm release 'ingress-nginx' already exists, skipping."
+else
+  echo "Installing Ingress-NGINX Helm release 'ingress-nginx'..."
+  helm install ingress-nginx ingress-nginx/ingress-nginx \
+    --namespace ingress-nginx --create-namespace \
     --set controller.service.type=NodePort \
     --set controller.service.nodePorts.http="$HTTP_PORT" \
     --set controller.service.nodePorts.https="$HTTPS_PORT"
-else
-  echo "✅ Ingress-NGINX Helm release 'ingress-nginx' already exists in namespace ingress-nginx."
 fi
 
