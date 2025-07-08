@@ -402,9 +402,9 @@ data "aws_route53_zone" "main_zone" {
 }
 
 # Create A record for majd.app.fursa.click -> ALB
-resource "aws_route53_record" "majd_subdomain_dev" {
+resource "aws_route53_record" "majd_subdomain" {
   zone_id = data.aws_route53_zone.main_zone.zone_id
-  name    = "majd.app.dev"
+  name    = "majd.app"
   type    = "A"
 
   alias {
@@ -414,60 +414,26 @@ resource "aws_route53_record" "majd_subdomain_dev" {
   }
 }
 
-resource "aws_acm_certificate" "majd_cert_dev" {
-  domain_name       = "majd.app.dev.fursa.click"
+resource "aws_acm_certificate" "majd_cert" {
+  domain_name       = "majd.app.fursa.click"
   validation_method = "DNS"
 
   tags = {
-    Name = "majd.app.dev.fursa.click"
+    Name = "majd.app.fursa.click Cert"
   }
 }
 
-resource "aws_route53_record" "majd_cert_validation_dev" {
-  name    = tolist(aws_acm_certificate.majd_cert_dev.domain_validation_options)[0].resource_record_name
-  type    = tolist(aws_acm_certificate.majd_cert_dev.domain_validation_options)[0].resource_record_type
+resource "aws_route53_record" "majd_cert_validation" {
+  name    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_name
+  type    = tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_type
   zone_id = data.aws_route53_zone.main_zone.zone_id
-  records = [tolist(aws_acm_certificate.majd_cert_dev.domain_validation_options)[0].resource_record_value]
+  records = [tolist(aws_acm_certificate.majd_cert.domain_validation_options)[0].resource_record_value]
   ttl     = 300
 }
 
-resource "aws_acm_certificate_validation" "majd_cert_validation_dev" {
-  certificate_arn         = aws_acm_certificate.majd_cert_dev.arn
-  validation_record_fqdns = [aws_route53_record.majd_cert_validation_dev.fqdn]
-}
-
-resource "aws_route53_record" "majd_subdomain_prod" {
-  zone_id = data.aws_route53_zone.main_zone.zone_id
-  name    = "majd.app.prod"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.worker_alb.dns_name
-    zone_id                = aws_lb.worker_alb.zone_id
-    evaluate_target_health = true
-  }
-}
-
-resource "aws_acm_certificate" "majd_cert_prod" {
-  domain_name       = "majd.app.prod.fursa.click"
-  validation_method = "DNS"
-
-  tags = {
-    Name = "majd.app.prod.fursa.click"
-  }
-}
-
-resource "aws_route53_record" "majd_cert_validation_prod" {
-  name    = tolist(aws_acm_certificate.majd_cert_prod.domain_validation_options)[0].resource_record_name
-  type    = tolist(aws_acm_certificate.majd_cert_prod.domain_validation_options)[0].resource_record_type
-  zone_id = data.aws_route53_zone.main_zone.zone_id
-  records = [tolist(aws_acm_certificate.majd_cert_prod.domain_validation_options)[0].resource_record_value]
-  ttl     = 300
-}
-
-resource "aws_acm_certificate_validation" "majd_cert_validation_prod" {
-  certificate_arn         = aws_acm_certificate.majd_cert_prod.arn
-  validation_record_fqdns = [aws_route53_record.majd_cert_validation_prod.fqdn]
+resource "aws_acm_certificate_validation" "majd_cert_validation" {
+  certificate_arn         = aws_acm_certificate.majd_cert.arn
+  validation_record_fqdns = [aws_route53_record.majd_cert_validation.fqdn]
 }
 
 resource "aws_lb_listener" "https" {
@@ -475,7 +441,7 @@ resource "aws_lb_listener" "https" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = [aws_acm_certificate_validation.majd_cert_validation_prod.certificate_arn, aws_acm_certificate_validation.majd_cert_validation_dev.certificate_arn]
+  certificate_arn   = aws_acm_certificate_validation.majd_cert_validation.certificate_arn
 
   default_action {
     type             = "forward"
