@@ -497,6 +497,11 @@ resource "aws_instance" "k8s_cp" {
   associate_public_ip_address = true
   iam_instance_profile        =  aws_iam_instance_profile.ec2_profile.name
   key_name                    = var.key_pair_name
+  root_block_device {
+    volume_size = 20              # 20 GB EBS volume
+    volume_type = "gp3"           # gp3 recommended over gp2 for performance and cost
+    delete_on_termination = true  # cleans up on destroy
+  }
   user_data = <<-EOF
     #!/bin/bash
     set -eux
@@ -596,15 +601,15 @@ resource "aws_launch_template" "worker_lt" {
     associate_public_ip_address = true
     security_groups             = [aws_security_group.node_SG.id]
   }
-  # block_device_mappings {
-  #   device_name = "/dev/xvda"  # This is typically the root device for Amazon Linux/Ubuntu
-  #
-  #   ebs {
-  #     volume_size = 20         # Size in GiB
-  #     volume_type = "gp2"      # General Purpose SSD
-  #     delete_on_termination = true
-  #   }
-  # }
+  block_device_mappings {
+    device_name = "/dev/xvda"  # This is typically the root device for Amazon Linux/Ubuntu
+
+    ebs {
+      volume_size = 20         # Size in GiB
+      volume_type = "gp2"      # General Purpose SSD
+      delete_on_termination = true
+    }
+  }
 
   tag_specifications {
     resource_type = "instance"
