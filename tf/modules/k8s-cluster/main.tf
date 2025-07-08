@@ -475,12 +475,17 @@ resource "aws_lb_listener" "https" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = [aws_acm_certificate_validation.majd_cert_validation_prod.certificate_arn, aws_acm_certificate_validation.majd_cert_validation_dev.certificate_arn]
+  certificate_arn   = aws_acm_certificate_validation.majd_cert_validation_prod.certificate_arn
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.worker_tg.arn  # your existing target group
+    target_group_arn = aws_lb_target_group.worker_tg.arn
   }
+}
+
+resource "aws_lb_listener_certificate" "dev_cert" {
+  listener_arn    = aws_lb_listener.https.arn
+  certificate_arn = aws_acm_certificate_validation.majd_cert_validation_dev.certificate_arn
 }
 #--------------------------------------------------------- k8s cluster-----------------------------------
 # This EC2 instance serves as the Kubernetes control plane (CP).
