@@ -13,6 +13,8 @@ on:
         required: true
       TELEGRAM_TOKEN_DEV:
         required: true
+      PAT_GIT:
+        required: true
 
 permissions:
   contents: write
