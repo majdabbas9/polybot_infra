@@ -1,17 +1,19 @@
 #!/bin/bash
 exec > >(tee -a setup.log) 2>&1
 set -euxo pipefail
-echo "DEV_BUCKET_ID: $DEV_BUCKET_ID"
-echo "PROD_BUCKET_ID: $PROD_BUCKET_ID"
-echo "DEV_SQS_URL: $DEV_SQS_URL"
-echo "PROD_SQS_URL: $PROD_SQS_URL"
 
-kubectl create secret generic my-secrets \
+# Create secret in dev namespace
+kubectl create secret generic my-secrets-dev \
+  --namespace=dev \
   --from-literal=TELEGRAM_TOKEN_DEV="$TELEGRAM_TOKEN_DEV" \
-  --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
   --from-literal=DEV_BUCKET_ID="$DEV_BUCKET_ID" \
+  --from-literal=DEV_SQS_URL="$DEV_SQS_URL"
+
+# Create secret in prod namespace
+kubectl create secret generic my-secrets-prod \
+  --namespace=prod \
+  --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
   --from-literal=PROD_BUCKET_ID="$PROD_BUCKET_ID" \
-  --from-literal=DEV_SQS_URL="$DEV_SQS_URL" \
   --from-literal=PROD_SQS_URL="$PROD_SQS_URL"
 
 # Install Calico if not installed
