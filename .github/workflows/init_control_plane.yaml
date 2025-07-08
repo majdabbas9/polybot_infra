@@ -83,7 +83,7 @@ jobs:
           
           scp cp_init.sh ec2:/home/ubuntu/
           ssh ec2 "TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
-          GITHUB_PAT='${{ secrets.GITHUB_PAT }}' \
+          GITHUB_PAT='${{ secrets.PAT_GIT }}' \
           TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
           DEV_BUCKET_ID='$DEV_BUCKET_ID' \
           PROD_BUCKET_ID='$PROD_BUCKET_ID' \
