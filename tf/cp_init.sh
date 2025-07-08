@@ -2,6 +2,15 @@
 exec > >(tee -a setup.log) 2>&1
 set -euxo pipefail
 
+for ns in dev prod argocd ingress-nginx; do
+  if ! kubectl get namespace "$ns" >/dev/null 2>&1; then
+    echo "Creating namespace $ns"
+    kubectl create namespace "$ns"
+  else
+    echo "Namespace $ns already exists, skipping."
+  fi
+done
+
 # Create secret in dev namespace
 kubectl create secret generic my-secrets-dev \
   --namespace=dev \
