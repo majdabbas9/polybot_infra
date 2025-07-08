@@ -533,27 +533,6 @@ resource "aws_instance" "k8s_cp" {
         --region "eu-west-1"
 
       echo "Cluster init completed" >> /var/log/k.txt
-
-      # --- Fetch secrets from AWS Secrets Manager and create Kubernetes secret ---
-      echo "Fetching secrets from AWS Secrets Manager" >> /var/log/k.txt
-
-      SECRET_JSON=$(aws secretsmanager get-secret-value \
-        --secret-id "majd/dev/polybot" \
-        --query SecretString \
-        --output text \
-        --region "eu-west-1")
-
-      TELEGRAM_TOKEN=$(echo "$SECRET_JSON" | jq -r .telegram_token)
-
-      if ! kubectl get secret polybot-secret >/dev/null 2>&1; then
-        kubectl create secret generic polybot-secret \
-          --from-literal=telegram_token="$TELEGRAM_TOKEN" \
-          --from-literal=s3_bucket_id="$aws_s3_bucket.bucket_dev.id" \
-          --from-literal=sqs_queue_url="$aws_sqs_queue.sqs_dev.id" \
-        echo "Kubernetes secret 'polybot-secret' created successfully" >> /var/log/k.txt
-      else
-        echo "Kubernetes secret 'polybot-secret' already exists" >> /var/log/k.txt
-      fi
     fi
   EOF
 
