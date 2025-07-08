@@ -1,11 +1,6 @@
 #!/bin/bash
 set -euxo pipefail
 
-if [ "$#" -ne 6 ]; then
-  echo "Usage: $0 <TELEGRAM_TOKEN_DEV> <TELEGRAM_TOKEN> <DEV_BUCKET_ID> <PROD_BUCKET_ID> <DEV_SQS_URL> <PROD_SQS_URL>"
-  exit 1
-fi
-
 TELEGRAM_TOKEN_DEV="$1"
 TELEGRAM_TOKEN="$2"
 DEV_BUCKET_ID="$3"
