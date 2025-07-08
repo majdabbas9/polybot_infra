@@ -6,6 +6,29 @@ KUBERNETES_VERSION=v1.32
 
 echo "Reached k1" >> /var/log/k.txt
 
+if [ "$#" -ne 6 ]; then
+  echo "Usage: $0 <TELEGRAM_TOKEN_DEV> <TELEGRAM_TOKEN> <DEV_BUCKET_ID> <PROD_BUCKET_ID> <DEV_SQS_URL> <PROD_SQS_URL>"
+  exit 1
+fi
+
+TELEGRAM_TOKEN_DEV="$1"
+TELEGRAM_TOKEN="$2"
+DEV_BUCKET_ID="$3"
+PROD_BUCKET_ID="$4"
+DEV_SQS_URL="$5"
+PROD_SQS_URL="$6"
+
+# Create or update the k8s secret named "my-secrets"
+kubectl delete secret my-secrets --ignore-not-found
+
+kubectl create secret generic my-secrets \
+  --from-literal=TELEGRAM_TOKEN_DEV="$TELEGRAM_TOKEN_DEV" \
+  --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
+  --from-literal=DEV_BUCKET_ID="$DEV_BUCKET_ID" \
+  --from-literal=PROD_BUCKET_ID="$PROD_BUCKET_ID" \
+  --from-literal=DEV_SQS_URL="$DEV_SQS_URL" \
+  --from-literal=PROD_SQS_URL="$PROD_SQS_URL"
+
 apt-get update
 apt-get install -y jq unzip ebtables ethtool curl software-properties-common apt-transport-https ca-certificates gpg
 
