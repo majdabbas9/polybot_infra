@@ -15,7 +15,7 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - image: majdabbas99/polybot_build_dev:190
+      - image: majdabbas99/polybot_dev:210
         name: polybot-container
 ---
 apiVersion: v1
