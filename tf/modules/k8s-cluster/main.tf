@@ -596,6 +596,15 @@ resource "aws_launch_template" "worker_lt" {
     associate_public_ip_address = true
     security_groups             = [aws_security_group.node_SG.id]
   }
+  # block_device_mappings {
+  #   device_name = "/dev/xvda"  # This is typically the root device for Amazon Linux/Ubuntu
+  #
+  #   ebs {
+  #     volume_size = 20         # Size in GiB
+  #     volume_type = "gp2"      # General Purpose SSD
+  #     delete_on_termination = true
+  #   }
+  # }
 
   tag_specifications {
     resource_type = "instance"
