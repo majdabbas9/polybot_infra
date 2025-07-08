@@ -39,7 +39,7 @@ jobs:
           cd tf
           terraform init
           echo "CONTROL_PLANE_IP=$(terraform output -raw control_plane_public_ip)" >> $GITHUB_ENV
-          cat ${{ env.CONTROL_PLANE_IP }}
+          echo "ip = ${{ env.CONTROL_PLANE_IP }}"
           cd ..
 
       - name: Configure SSH
