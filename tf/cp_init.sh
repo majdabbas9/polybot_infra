@@ -63,15 +63,14 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
-# Install Argo CD Helm chart
-if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
-  echo "🚀 Installing Argo CD via Helm into namespace $NAMESPACE..."
+if ! helm status argocd -n argocd > /dev/null 2>&1; then
+  echo "🚀 Installing Argo CD via Helm into namespace argocd..."
   helm install argocd argo/argo-cd --namespace argocd \
-  --set server.service.type=NodePort \
-  --set server.service.nodePortHttp="$HTTP_PORT" \
-  --set server.service.nodePortHttps="$HTTPS_PORT"
+    --set server.service.type=NodePort \
+    --set server.service.nodePortHttp="$HTTP_PORT" \
+    --set server.service.nodePortHttps="$HTTPS_PORT"
 else
-  echo "✅ Argo CD Helm release '$RELEASE_NAME' already exists in namespace $NAMESPACE."
+  echo "✅ Argo CD Helm release 'argocd' already exists in namespace argocd."
 fi
 
 # Install Ingress NGINX Helm chart
