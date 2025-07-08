@@ -74,10 +74,7 @@ helm repo update
 
 if ! helm status argocd -n argocd > /dev/null 2>&1; then
   echo "🚀 Installing Argo CD via Helm into namespace argocd..."
-  helm install argocd argo/argo-cd --namespace argocd \
-    --set server.service.type=NodePort \
-    --set server.service.nodePortHttp="$HTTP_PORT" \
-    --set server.service.nodePortHttps="$HTTPS_PORT"
+  helm install argocd argo/argo-cd --namespace argocd
 else
   echo "✅ Argo CD Helm release 'argocd' already exists in namespace argocd."
 fi
