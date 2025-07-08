@@ -30,6 +30,7 @@ jobs:
       - name: Terraform Init & Apply
         run: |
           terraform init
+          terraform destroy -var-file=region.eu-west-1.tfvars --auto-approve
           terraform apply -var-file=region.eu-west-1.tfvars --auto-approve
           # terraform apply -var-file=region.eu-west-1.tfvars --auto-approve
   init_control_plane:
