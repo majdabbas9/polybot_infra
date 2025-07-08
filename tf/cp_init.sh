@@ -31,23 +31,9 @@ else
 fi
 
 # Argo CD Helm install vars
-NAMESPACE="argocd"
-RELEASE_NAME="argocd"
-ARGOCD_HELM_REPO="https://argoproj.github.io/argo-helm"
-ARGOCD_HELM_CHART="argo-cd"
 
-INGRESS_NAMESPACE="ingress-nginx"
-INGRESS_RELEASE="nginx-ingress"
 HTTP_PORT=31080
 HTTPS_PORT=30001
-
-## Create Argo CD Namespace if needed
-#if ! kubectl get namespace "$NAMESPACE" > /dev/null 2>&1; then
-#  echo "🔧 Creating namespace $NAMESPACE..."
-#  kubectl create namespace "$NAMESPACE"
-#else
-#  echo "✅ Namespace $NAMESPACE already exists."
-#fi
 
 # Install Helm if missing
 if ! command -v helm &> /dev/null; then
@@ -68,23 +54,26 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
-## Install Argo CD Helm chart
-#if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
-#  echo "🚀 Installing Argo CD via Helm into namespace $NAMESPACE..."
-#  helm install "$RELEASE_NAME" argo/"$ARGOCD_HELM_CHART" -n "$NAMESPACE"
-#else
-#  echo "✅ Argo CD Helm release '$RELEASE_NAME' already exists in namespace $NAMESPACE."
-#fi
+# Install Argo CD Helm chart
+if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" > /dev/null 2>&1; then
+  echo "🚀 Installing Argo CD via Helm into namespace $NAMESPACE..."
+  helm install argocd argo/argo-cd --namespace argocd \
+  --set server.service.type=NodePort \
+  --set server.service.nodePortHttp="$HTTP_PORT" \
+  --set server.service.nodePortHttps="$HTTPS_PORT"
+else
+  echo "✅ Argo CD Helm release '$RELEASE_NAME' already exists in namespace $NAMESPACE."
+fi
 
 # Install Ingress NGINX Helm chart
-if ! helm status "$INGRESS_RELEASE" -n "$INGRESS_NAMESPACE" > /dev/null 2>&1; then
+if ! helm status "ingress-nginx" -n "ingress-nginx" > /dev/null 2>&1; then
   echo "🌐 Installing Ingress-NGINX controller on NodePorts $HTTP_PORT/$HTTPS_PORT..."
-  helm install "$INGRESS_RELEASE" ingress-nginx/ingress-nginx \
-    --namespace "$INGRESS_NAMESPACE" --create-namespace \
+  helm install "ingress-nginx" ingress-nginx/ingress-nginx \
+    --namespace "ingress-nginx" --create-namespace \
     --set controller.service.type=NodePort \
     --set controller.service.nodePorts.http="$HTTP_PORT" \
     --set controller.service.nodePorts.https="$HTTPS_PORT"
 else
-  echo "✅ Ingress-NGINX Helm release '$INGRESS_RELEASE' already exists in namespace $INGRESS_NAMESPACE."
+  echo "✅ Ingress-NGINX Helm release 'ingress-nginx' already exists in namespace ingress-nginx."
 fi
 
