@@ -17,6 +17,25 @@ spec:
       containers:
       - image: majdabbas99/polybot_dev:210
         name: polybot-container
+        env:
+          - name: TELEGRAM_BOT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: my-secrets-dev
+                key: TELEGRAM_TOKEN_DEV
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: my-secrets-dev
+                key: DEV_BUCKET_ID
+          - name: QUEUE_URL
+            valueFrom:
+              secretKeyRef:
+                name: my-secrets-dev
+                key: DEV_SQS_URL
+          - name: Nginx_url
+            value: "majd.app.fursa.click"
+
 ---
 apiVersion: v1
 kind: Service
