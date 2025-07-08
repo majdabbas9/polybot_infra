@@ -49,11 +49,18 @@ jobs:
         working-directory: tf
         run: python3 test_log.py
 
-      - name : saving secrets
+      - name: Save EC2 SSH key
+        working-directory: tf
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Copy and Run Init Script on Control Plane
         working-directory: tf
         env:
           PYTHONUNBUFFERED: 1
         run: |
+          chmod +x cp_init.sh
           TELEGRAM_TOKEN_DEV="${{ secrets.TELEGRAM_TOKEN_DEV }}"
           TELEGRAM_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
           DEV_BUCKET_ID=$(terraform output -raw s3_bucket_id_dev)
@@ -61,20 +68,16 @@ jobs:
           DEV_SQS_URL=$(terraform output -raw sqs_queue_url_dev)
           PROD_SQS_URL=$(terraform output -raw sqs_queue_url_prod)
           echo "Running Python script with extracted values..."
-          python3 save_secrets.py $TELEGRAM_TOKEN_DEV $TELEGRAM_TOKEN "$DEV_BUCKET_ID" "$PROD_BUCKET_ID" "$DEV_SQS_URL" "$PROD_SQS_URL"
+          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && \
+          TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
+          TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
+          DEV_BUCKET_ID='$DEV_BUCKET_ID' \
+          PROD_BUCKET_ID='$PROD_BUCKET_ID' \
+          DEV_SQS_URL='$DEV_SQS_URL' \
+          PROD_SQS_URL='$PROD_SQS_URL' \
+          ~/cp_init.sh"
 
-#      - name: Save EC2 SSH key
-#        working-directory: tf
-#        run: |
-#          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-#          chmod 600 key.pem
-#
-#      - name: Copy and Run Init Script on Control Plane
-#        working-directory: tf
-#        run: |
-#          chmod +x cp_init.sh
-#          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
-#          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && ~/cp_init.sh"
 #      - name: deploy argoCD
 #        working-directory: argoCD_apps
 #        run: |
