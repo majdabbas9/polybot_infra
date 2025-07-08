@@ -10,6 +10,15 @@ for ns in dev prod argocd ingress-nginx; do
     echo "Namespace $ns already exists, skipping."
   fi
 done
+if kubectl get secret ghcr-secret >/dev/null 2>&1; then
+  echo "Secret ghcr-secret exists"
+else
+  kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=majdabbas9 \
+  --docker-password=$GITHUB_PAT \
+  --docker-email=majd.abbas999@gmail.com
+fi
 
 # Create secret in dev namespace
 # Check if secret exists in dev namespace
