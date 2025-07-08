@@ -527,6 +527,21 @@ resource "aws_instance" "k8s_cp" {
         --overwrite \
         --region "eu-west-1"
 
+      SECRET_JSON_DEV=$(aws secretsmanager get-secret-value \
+        --secret-id "majd/dev/polybot" \
+        --query SecretString \
+        --output text \
+        --region eu-west-1)
+
+      # Parse individual values using jq
+      TELEGRAM_TOKEN_DEV=$(echo "$SECRET_JSON_DEV" | jq -r .telegram_token)
+      S3_BUCKET_ID_DEV=$(echo "$SECRET_JSON_DEV" | jq -r .s3_bucket_id)
+      SQS_QUEUE_URL_DEV=$(echo "$SECRET_JSON_DEV" | jq -r .sqs_queue_url)
+
+      kubectl create secret generic polybot-secret \
+        --from-literal=telegram_token_dev="$TELEGRAM_TOKEN_DEV" \
+        --from-literal=s3_bucket_id_dev="$S3_BUCKET_ID_DEV" \
+        --from-literal=sqs_queue_url_dev="$SQS_QUEUE_URL_DEV"
     fi
     echo "Cluster init completed" >> /var/log/k.txt
   EOF
