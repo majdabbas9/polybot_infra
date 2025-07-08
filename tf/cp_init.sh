@@ -66,8 +66,8 @@ helm version
 
 # Add Helm repos
 echo "📦 Adding Argo CD and Ingress-NGINX Helm repositories..."
-# helm repo add argo "$ARGOCD_HELM_REPO" || true
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
+helm repo add argo https://argoproj.github.io/argo-helm || true
 
 echo "🔄 Updating Helm repositories..."
 helm repo update
