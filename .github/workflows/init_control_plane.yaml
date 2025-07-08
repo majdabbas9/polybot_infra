@@ -34,12 +34,28 @@ jobs:
           aws-region: eu-west-1
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: Terraform Init and Output IP
+      - name : get host name
         working-directory: tf
         run: |
           terraform init
-          terraform output -raw control_plane_public_ip > ip.txt
+          echo "CONTROL_PLANE_IP=$(terraform output -raw control_plane_public_ip)" >> $GITHUB_ENV
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ env.CONTROL_PLANE_IP }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/private_key
+          chmod 600 ~/.ssh/private_key
+          cat > ~/.ssh/config << EOF
+          Host ec2
+              HostName $EC2_HOST
+              User $EC2_USERNAME
+              IdentityFile ~/.ssh/private_key
+              StrictHostKeyChecking no
+          EOF
 
       - name: Install boto3
         working-directory: tf
@@ -48,12 +64,6 @@ jobs:
       - name: Test Python logging
         working-directory: tf
         run: python3 test_log.py
-
-      - name: Save EC2 SSH key
-        working-directory: tf
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-          chmod 600 key.pem
 
       - name: Copy and Run Init Script on Control Plane
         working-directory: tf
@@ -68,15 +78,15 @@ jobs:
           DEV_SQS_URL=$(terraform output -raw sqs_queue_url_dev)
           PROD_SQS_URL=$(terraform output -raw sqs_queue_url_prod)
           echo "Running Python script with extracted values..."
-          scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) \
-          "TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
-           TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
-           DEV_BUCKET_ID='$DEV_BUCKET_ID' \
-           PROD_BUCKET_ID='$PROD_BUCKET_ID' \
-           DEV_SQS_URL='$DEV_SQS_URL' \
-           PROD_SQS_URL='$PROD_SQS_URL' \
-           bash -c '~/cp_init.sh'"
+          
+          scp cp_init.sh ec2:/home/${{ secrets.EC2_USERNAME }}/
+          ssh ec2 "TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
+          TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
+          DEV_BUCKET_ID='$DEV_BUCKET_ID' \
+          PROD_BUCKET_ID='$PROD_BUCKET_ID' \
+          DEV_SQS_URL='$DEV_SQS_URL' \
+          PROD_SQS_URL='$PROD_SQS_URL' \
+          bash -c '~/cp_init.sh'"
 
       - name: deploy argoCD
         working-directory: argoCD_main
@@ -84,8 +94,8 @@ jobs:
           terraform output -raw control_plane_public_ip > ip.txt
           echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
           chmod 600 key.pem
-          scp -i key.pem -o StrictHostKeyChecking=no app_for_apps.yaml ubuntu@$(cat ip.txt):~/app_for_apps.yaml
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "kubectl apply -f ~/app_for_apps.yaml"
+          scp app_for_apps.yaml ec2:/home/${{ secrets.EC2_USERNAME }}/
+          ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
 #
 #
 #      - name: depoly polybot_dev
