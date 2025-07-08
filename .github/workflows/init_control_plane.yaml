@@ -44,17 +44,16 @@ jobs:
       - name: Configure SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
         run: |
           echo "Control plane IP is $CONTROL_PLANE_IP"
-          echo "EC2 Username is $EC2_USERNAME"
+          echo "EC2 Username is ubuntu"
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/private_key
           chmod 600 ~/.ssh/private_key
           cat > ~/.ssh/config <<EOF
           Host ec2
               HostName $CONTROL_PLANE_IP
-              User $EC2_USERNAME
+              User ubuntu
               IdentityFile ~/.ssh/private_key
               StrictHostKeyChecking no
           EOF
