@@ -1,6 +1,6 @@
 #!/bin/bash
+exec > >(tee -a setup.log) 2>&1
 set -euxo pipefail
-
 TELEGRAM_TOKEN_DEV="$1"
 TELEGRAM_TOKEN="$2"
 DEV_BUCKET_ID="$3"
