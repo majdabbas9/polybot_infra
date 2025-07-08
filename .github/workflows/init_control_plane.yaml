@@ -69,14 +69,14 @@ jobs:
           PROD_SQS_URL=$(terraform output -raw sqs_queue_url_prod)
           echo "Running Python script with extracted values..."
           scp -i key.pem -o StrictHostKeyChecking=no cp_init.sh ubuntu@$(cat ip.txt):~/cp_init.sh
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) "chmod +x ~/cp_init.sh && \
-          TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
-          TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
-          DEV_BUCKET_ID='$DEV_BUCKET_ID' \
-          PROD_BUCKET_ID='$PROD_BUCKET_ID' \
-          DEV_SQS_URL='$DEV_SQS_URL' \
-          PROD_SQS_URL='$PROD_SQS_URL' \
-          ~/cp_init.sh"
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$(cat ip.txt) \
+          "TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
+           TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
+           DEV_BUCKET_ID='$DEV_BUCKET_ID' \
+           PROD_BUCKET_ID='$PROD_BUCKET_ID' \
+           DEV_SQS_URL='$DEV_SQS_URL' \
+           PROD_SQS_URL='$PROD_SQS_URL' \
+           bash -c '~/cp_init.sh'"
 
 #      - name: deploy argoCD
 #        working-directory: argoCD_apps
