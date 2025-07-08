@@ -512,6 +512,10 @@ resource "aws_instance" "k8s_cp" {
     if [ ! -f /etc/kubernetes/admin.conf ]; then
       kubeadm init --pod-network-cidr=10.244.0.0/16
 
+      # Set up kubeconfig for root user (for script use)
+      export KUBECONFIG=/etc/kubernetes/admin.conf
+
+      # Set up kubeconfig for ubuntu user
       mkdir -p /home/ubuntu/.kube
       cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
       chown ubuntu:ubuntu /home/ubuntu/.kube/config
@@ -519,6 +523,7 @@ resource "aws_instance" "k8s_cp" {
       # Install Flannel CNI
       su - ubuntu -c "kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
 
+      # Save join command to SSM
       TOKEN=$(kubeadm token create --ttl 48h --print-join-command)
       aws ssm put-parameter \
         --name "/k8s/worker/join-command-majd" \
@@ -527,23 +532,31 @@ resource "aws_instance" "k8s_cp" {
         --overwrite \
         --region "eu-west-1"
 
-      SECRET_JSON_DEV=$(aws secretsmanager get-secret-value \
+      echo "Cluster init completed" >> /var/log/k.txt
+
+      # --- Fetch secrets from AWS Secrets Manager and create Kubernetes secret ---
+      echo "Fetching secrets from AWS Secrets Manager" >> /var/log/k.txt
+
+      SECRET_JSON=$(aws secretsmanager get-secret-value \
         --secret-id "majd/dev/polybot" \
         --query SecretString \
         --output text \
-        --region eu-west-1)
+        --region "eu-west-1")
 
-      # Parse individual values using jq
-      TELEGRAM_TOKEN_DEV=$(echo "$SECRET_JSON_DEV" | jq -r .telegram_token)
-      S3_BUCKET_ID_DEV=$(echo "$SECRET_JSON_DEV" | jq -r .s3_bucket_id)
-      SQS_QUEUE_URL_DEV=$(echo "$SECRET_JSON_DEV" | jq -r .sqs_queue_url)
+      TELEGRAM_TOKEN=$(echo "$SECRET_JSON" | jq -r .telegram_token)
+      S3_BUCKET_ID=$(echo "$SECRET_JSON" | jq -r .s3_bucket_id)
+      SQS_QUEUE_URL=$(echo "$SECRET_JSON" | jq -r .sqs_queue_url)
 
-      kubectl create secret generic polybot-secret \
-        --from-literal=telegram_token_dev="$TELEGRAM_TOKEN_DEV" \
-        --from-literal=s3_bucket_id_dev="$S3_BUCKET_ID_DEV" \
-        --from-literal=sqs_queue_url_dev="$SQS_QUEUE_URL_DEV"
+      if ! kubectl get secret polybot-secret >/dev/null 2>&1; then
+        kubectl create secret generic polybot-secret \
+          --from-literal=telegram_token="$TELEGRAM_TOKEN" \
+          --from-literal=s3_bucket_id="$S3_BUCKET_ID" \
+          --from-literal=sqs_queue_url="$SQS_QUEUE_URL"
+        echo "Kubernetes secret 'polybot-secret' created successfully" >> /var/log/k.txt
+      else
+        echo "Kubernetes secret 'polybot-secret' already exists" >> /var/log/k.txt
+      fi
     fi
-    echo "Cluster init completed" >> /var/log/k.txt
   EOF
 
 
