@@ -47,10 +47,11 @@ jobs:
           EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
         run: |
           echo "Control plane IP is $CONTROL_PLANE_IP"
+          echo "EC2 Username is $EC2_USERNAME"
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/private_key
           chmod 600 ~/.ssh/private_key
-          cat > ~/.ssh/config << EOF
+          cat > ~/.ssh/config <<EOF
           Host ec2
               HostName $CONTROL_PLANE_IP
               User $EC2_USERNAME
