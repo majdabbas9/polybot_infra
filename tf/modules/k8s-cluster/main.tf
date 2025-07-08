@@ -606,7 +606,7 @@ resource "aws_launch_template" "worker_lt" {
 
     ebs {
       volume_size = 20         # Size in GiB
-      volume_type = "gp2"      # General Purpose SSD
+      volume_type = "gp3"      # General Purpose SSD
       delete_on_termination = true
     }
   }
