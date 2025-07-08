@@ -82,19 +82,19 @@ jobs:
           echo "Running Python script with extracted values..."
           
           scp cp_init.sh ec2:/home/ubuntu/
-#          ssh ec2 "TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
-#          TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
-#          DEV_BUCKET_ID='$DEV_BUCKET_ID' \
-#          PROD_BUCKET_ID='$PROD_BUCKET_ID' \
-#          DEV_SQS_URL='$DEV_SQS_URL' \
-#          PROD_SQS_URL='$PROD_SQS_URL' \
-#          bash -c '~/cp_init.sh'"
+          ssh ec2 "TELEGRAM_TOKEN_DEV='$TELEGRAM_TOKEN_DEV' \
+          TELEGRAM_TOKEN='$TELEGRAM_TOKEN' \
+          DEV_BUCKET_ID='$DEV_BUCKET_ID' \
+          PROD_BUCKET_ID='$PROD_BUCKET_ID' \
+          DEV_SQS_URL='$DEV_SQS_URL' \
+          PROD_SQS_URL='$PROD_SQS_URL' \
+          bash -c '~/cp_init.sh'"
 
       - name: deploy argoCD
         working-directory: argoCD_main
         run: |
-          scp app_for_apps.yaml ec2:/home/${{ secrets.EC2_USERNAME }}/
-          # ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
+          scp app_for_apps.yaml ec2:/home/ubuntu/
+          ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
 #
 #
 #      - name: depoly polybot_dev
