@@ -12,18 +12,27 @@ for ns in dev prod argocd ingress-nginx; do
 done
 
 # Create secret in dev namespace
-kubectl create secret generic my-secrets-dev \
-  --namespace=dev \
-  --from-literal=TELEGRAM_TOKEN_DEV="$TELEGRAM_TOKEN_DEV" \
-  --from-literal=DEV_BUCKET_ID="$DEV_BUCKET_ID" \
-  --from-literal=DEV_SQS_URL="$DEV_SQS_URL"
+# Check if secret exists in dev namespace
+if kubectl get secret my-secrets-dev --namespace=dev > /dev/null 2>&1; then
+  echo "Secret my-secrets-dev already exists in dev namespace"
+else
+  kubectl create secret generic my-secrets-dev \
+    --namespace=dev \
+    --from-literal=TELEGRAM_TOKEN_DEV="$TELEGRAM_TOKEN_DEV" \
+    --from-literal=DEV_BUCKET_ID="$DEV_BUCKET_ID" \
+    --from-literal=DEV_SQS_URL="$DEV_SQS_URL"
+fi
 
-# Create secret in prod namespace
-kubectl create secret generic my-secrets-prod \
-  --namespace=prod \
-  --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
-  --from-literal=PROD_BUCKET_ID="$PROD_BUCKET_ID" \
-  --from-literal=PROD_SQS_URL="$PROD_SQS_URL"
+# Check if secret exists in prod namespace
+if kubectl get secret my-secrets-prod --namespace=prod > /dev/null 2>&1; then
+  echo "Secret my-secrets-prod already exists in prod namespace"
+else
+  kubectl create secret generic my-secrets-prod \
+    --namespace=prod \
+    --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
+    --from-literal=PROD_BUCKET_ID="$PROD_BUCKET_ID" \
+    --from-literal=PROD_SQS_URL="$PROD_SQS_URL"
+fi
 
 # Install Calico if not installed
 if ! kubectl get pods -n kube-system | grep calico >/dev/null 2>&1; then
