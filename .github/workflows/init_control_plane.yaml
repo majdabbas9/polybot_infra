@@ -43,7 +43,7 @@ jobs:
         run: |
           cd tf
           terraform init
-          ip = $(terraform output -raw control_plane_public_ip)
+          ip=$(terraform output -raw control_plane_public_ip)
           echo "CONTROL_PLANE_IP=$ip" >> $GITHUB_ENV
           echo "cp_ip_next_wf=$ip" >> $GITHUB_OUTPUT
           cd ..
