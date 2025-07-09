@@ -27,9 +27,9 @@ if kubectl get secret my-secrets-dev --namespace=dev > /dev/null 2>&1; then
 else
   kubectl create secret generic my-secrets-dev \
     --namespace=dev \
-    --from-literal=TELEGRAM_TOKEN_DEV="$TELEGRAM_TOKEN_DEV" \
-    --from-literal=DEV_BUCKET_ID="$DEV_BUCKET_ID" \
-    --from-literal=DEV_SQS_URL="$DEV_SQS_URL"
+    --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN_DEV" \
+    --from-literal=BUCKET_ID="$DEV_BUCKET_ID" \
+    --from-literal=SQS_URL="$DEV_SQS_URL"
 fi
 
 # Check if secret exists in prod namespace
@@ -39,8 +39,8 @@ else
   kubectl create secret generic my-secrets-prod \
     --namespace=prod \
     --from-literal=TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
-    --from-literal=PROD_BUCKET_ID="$PROD_BUCKET_ID" \
-    --from-literal=PROD_SQS_URL="$PROD_SQS_URL"
+    --from-literal=BUCKET_ID="$PROD_BUCKET_ID" \
+    --from-literal=SQS_URL="$PROD_SQS_URL"
 fi
 
 # Install Calico if not installed

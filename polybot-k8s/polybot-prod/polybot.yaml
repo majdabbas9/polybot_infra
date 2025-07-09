@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: dev
+  namespace: prod
   labels:
-    app: polybot-dev
-  name: polybot-dev
+    app: polybot-prod
+  name: polybot-prod
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: polybot-dev
+      app: polybot-prod
   template:
     metadata:
       labels:
-        app: polybot-dev
+        app: polybot-prod
     spec:
       containers:
       - image: ghcr.io/majdabbas9/telegram_bot_images:219
@@ -22,29 +22,29 @@ spec:
           - name: TELEGRAM_BOT_TOKEN
             valueFrom:
               secretKeyRef:
-                name: my-secrets-dev
+                name: my-secrets-prod
                 key: TELEGRAM_TOKEN
           - name: S3_BUCKET_NAME
             valueFrom:
               secretKeyRef:
-                name: my-secrets-dev
+                name: my-secrets-prod
                 key: BUCKET_ID
           - name: QUEUE_URL
             valueFrom:
               secretKeyRef:
-                name: my-secrets-dev
+                name: my-secrets-prod
                 key: SQS_URL
           - name: NGINX_URL
-            value: "https://majd.app.dev.fursa.click"
+            value: "https://majd.app.prod.fursa.click"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: polybot-service
-  namespace: dev
+  name: polybot-prod-service
+  namespace: prod
 spec:
   selector:
-    app: polybot-dev
+    app: polybot-prod
   ports:
     - port: 8080         # Internal port (what Ingress sees)
       targetPort: 8443   # Your app's container port
@@ -52,14 +52,14 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: polybot-dev-ingress
-  namespace: dev
+  name: polybot-prod-ingress
+  namespace: prod
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Prevent redirect loop
 spec:
   ingressClassName: nginx
   rules:
-  - host: majd.app.dev.fursa.click
+  - host: majd.app.prod.fursa.click
     http:
       paths:
       - path: /
