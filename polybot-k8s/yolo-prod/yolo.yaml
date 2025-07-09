@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: prod
   labels:
     app: yolo-prod
   name: yolo-prod
+  namespace: prod
 spec:
   replicas: 2
   selector:
@@ -16,30 +16,30 @@ spec:
         app: yolo-prod
     spec:
       containers:
-      - image: ghcr.io/majdabbas9/yolo_image:51
+      - env:
+        - name: TELEGRAM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: TELEGRAM_TOKEN
+              name: my-secrets-prod
+        - name: S3_BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              key: BUCKET_ID
+              name: my-secrets-prod
+        - name: QUEUE_URL
+          valueFrom:
+            secretKeyRef:
+              key: SQS_URL
+              name: my-secrets-prod
+        - name: POLYBOT_URL
+          value: polybot-service
+        - name: STORAGE_TYPE
+          value: dynamodb
+        image: AQICAHgqsvSanZ7EmiTe/XdfTsU/osZD2tgE9q6r9812xkf/7AFAXrg3a2gLTk7XEBFA+VtaAAAAgzCBgAYJKoZIhvcNAQcGoHMwcQIBADBsBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDFcuvwc1LilyM3bMngIBEIA/uIvJuvIyBG1jAUUrPTF4kHw3EIk9QQlsfInHhIsb51hErfpq/uEpgU6xsxjTets1JGzsOKc7Rc8ClWt2w7dd
         name: yolo-container
         resources:
-          requests:
-            cpu: "100m"
           limits:
-            cpu: "500m"
-        env:
-          - name: TELEGRAM_BOT_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: my-secrets-prod
-                key: TELEGRAM_TOKEN
-          - name: S3_BUCKET_NAME
-            valueFrom:
-              secretKeyRef:
-                name: my-secrets-prod
-                key: BUCKET_ID
-          - name: QUEUE_URL
-            valueFrom:
-              secretKeyRef:
-                name: my-secrets-prod
-                key: SQS_URL
-          - name: POLYBOT_URL
-            value: "polybot-service"
-          - name: STORAGE_TYPE
-            value: "dynamodb"
+            cpu: 500m
+          requests:
+            cpu: 100m

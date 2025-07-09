@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: dev
   labels:
     app: polybot-dev
   name: polybot-dev
+  namespace: dev
 spec:
   replicas: 1
   selector:
@@ -16,23 +16,23 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - image: ghcr.io/majdabbas9/telegram_bot_images:219
+      - env:
+        - name: TELEGRAM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: TELEGRAM_TOKEN
+              name: my-secrets-dev
+        - name: S3_BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              key: BUCKET_ID
+              name: my-secrets-dev
+        - name: QUEUE_URL
+          valueFrom:
+            secretKeyRef:
+              key: SQS_URL
+              name: my-secrets-dev
+        - name: NGINX_URL
+          value: https://majd.app.dev.fursa.click
+        image: AQICAHgqsvSanZ7EmiTe/XdfTsU/osZD2tgE9q6r9812xkf/7AGnxgHykhWDGnekxFPGmFpsAAAAhzCBhAYJKoZIhvcNAQcGoHcwdQIBADBwBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKenmQ5gZG4HFEC4QgIBEIBDKcLxyDcQ0LP0Yh/jkbJWs+JpMsFwFat+tUhqclYvZd+QQwQbtbbsSIPv1cFL6tppzWuGwegUV0tzxKstjgm88lJHzw==
         name: polybot-container
-        env:
-          - name: TELEGRAM_BOT_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: my-secrets-dev
-                key: TELEGRAM_TOKEN
-          - name: S3_BUCKET_NAME
-            valueFrom:
-              secretKeyRef:
-                name: my-secrets-dev
-                key: BUCKET_ID
-          - name: QUEUE_URL
-            valueFrom:
-              secretKeyRef:
-                name: my-secrets-dev
-                key: SQS_URL
-          - name: NGINX_URL
-            value: "https://majd.app.dev.fursa.click"
