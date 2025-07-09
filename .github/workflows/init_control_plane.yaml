@@ -63,9 +63,6 @@ jobs:
       - name: Install boto3
         run: pip3 install boto3 pyyaml
 
-      - name: Test Python logging
-        run: python3 test_log.py
-
       - name: Copy and Run Init Script on Control Plane
         working-directory:
           tf
