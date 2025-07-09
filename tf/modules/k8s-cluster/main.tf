@@ -605,7 +605,7 @@ resource "aws_launch_template" "worker_lt" {
     device_name = "/dev/xvda"   # <-- update based on CLI output
 
     ebs {
-      volume_size           = 20      # 20 GiB root volume
+      volume_size           = 30      # 20 GiB root volume
       volume_type           = "gp2"
       delete_on_termination = true
     }
