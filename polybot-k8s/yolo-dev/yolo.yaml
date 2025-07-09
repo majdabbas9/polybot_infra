@@ -23,17 +23,17 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: my-secrets-dev
-                key: TELEGRAM_TOKEN_DEV
+                key: TELEGRAM_TOKEN
           - name: S3_BUCKET_NAME
             valueFrom:
               secretKeyRef:
                 name: my-secrets-dev
-                key: DEV_BUCKET_ID
+                key: BUCKET_ID
           - name: QUEUE_URL
             valueFrom:
               secretKeyRef:
                 name: my-secrets-dev
-                key: DEV_SQS_URL
+                key: SQS_URL
           - name: POLYBOT_URL
             value: "polybot-service"
           - name: STORAGE_TYPE
@@ -49,4 +49,4 @@ spec:
     app: yolo-dev
   ports:
     - port: 8080         # Internal port (what Ingress sees)
-      targetPort: 8443   # Your app's container port
+      targetPort: 8080   # Your app's container port
