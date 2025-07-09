@@ -39,10 +39,10 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
           # Stage the updated polybot-dev YAML file
-          git add polybot-k8s/polybot-dev/yolo.yaml
-          git add polybot-k8s/yolo-dev/polybot.yaml
+          git add polybot-k8s/polybot-dev/polybot.yaml
+          git add polybot-k8s/yolo-dev/yolo.yaml
           git add polybot-k8s/polybot-prod/polybot.yaml
-          git add polybot-k8s/yolo-prod/polybot.yaml
+          git add polybot-k8s/yolo-prod/yolo.yaml
           # Commit changes if there are any, with a descriptive message
           git commit -m "ci: update polybot deployment YAMLs with latest image from SSM" || echo "No changes to commit"
 
