@@ -66,6 +66,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: polybot-service
+            name: polybot-prod-service
             port:
               number: 8443   # match the port your app listens on inside the pod

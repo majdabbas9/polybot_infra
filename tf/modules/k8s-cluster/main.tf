@@ -370,8 +370,8 @@ resource "aws_security_group" "lb_sg" {
   }
 }
 
-resource "aws_lb_target_group" "dev_worker_tg" {
-  name        = "${var.username}-dev-tg"
+resource "aws_lb_target_group" "worker_tg" {
+  name        = "${var.username}-tg"
   port        = 31080                # NodePort
   protocol    = "HTTP"
   vpc_id      = module.polybot_service_vpc.vpc_id
@@ -381,23 +381,6 @@ resource "aws_lb_target_group" "dev_worker_tg" {
     enabled             = true
     interval            = 30
     path                = "/healthz"
-    protocol            = "HTTP"
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-}
-resource "aws_lb_target_group" "prod_worker_tg" {
-  name        = "${var.username}-prod-tg"
-  port        = 31080
-  protocol    = "HTTP"
-  vpc_id      = module.polybot_service_vpc.vpc_id
-  target_type = "instance"
-
-  health_check {
-    enabled             = true
-    path                = "/healthz"
-    interval            = 30
     protocol            = "HTTP"
     timeout             = 5
     healthy_threshold   = 2
@@ -487,7 +470,6 @@ resource "aws_acm_certificate_validation" "majd_cert_validation_prod" {
   validation_record_fqdns = [aws_route53_record.majd_cert_validation_prod.fqdn]
 }
 
-
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.worker_alb.arn
   port              = 443
@@ -496,52 +478,15 @@ resource "aws_lb_listener" "https" {
   certificate_arn   = aws_acm_certificate_validation.majd_cert_validation_dev.certificate_arn
 
   default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = "404"
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.worker_tg.arn
   }
 }
+
 resource "aws_lb_listener_certificate" "prod_cert" {
   listener_arn    = aws_lb_listener.https.arn
   certificate_arn = aws_acm_certificate_validation.majd_cert_validation_prod.certificate_arn
 }
-
-resource "aws_lb_listener_rule" "dev_rule" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.dev_worker_tg.arn
-  }
-
-  condition {
-    host_header {
-      values = ["majd.app.dev.fursa.click"]
-    }
-  }
-}
-
-resource "aws_lb_listener_rule" "prod_rule" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 101
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.prod_worker_tg.arn
-  }
-
-  condition {
-    host_header {
-      values = ["majd.app.prod.fursa.click"]
-    }
-  }
-}
-
-
 #--------------------------------------------------------- k8s cluster-----------------------------------
 # This EC2 instance serves as the Kubernetes control plane (CP).
 resource "aws_instance" "k8s_cp" {
@@ -755,10 +700,7 @@ resource "aws_autoscaling_group" "worker_asg" {
   vpc_zone_identifier       = module.polybot_service_vpc.public_subnets
   health_check_type         = "EC2"
   health_check_grace_period = 300
-  target_group_arns = [
-    aws_lb_target_group.dev_worker_tg.arn,
-    aws_lb_target_group.prod_worker_tg.arn
-  ]
+  target_group_arns         = [aws_lb_target_group.worker_tg.arn]
 
   launch_template {
     id      = aws_launch_template.worker_lt.id
@@ -1030,5 +972,4 @@ resource "aws_sns_topic_subscription" "email_notify" {
   protocol  = "email"
   endpoint  = "majd.abbas999@gmail.com"  # Replace with your email
 }
-
 
