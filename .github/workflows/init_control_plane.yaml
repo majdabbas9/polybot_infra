@@ -120,3 +120,7 @@ jobs:
         run: |
           scp app_for_apps.yaml ec2:/home/ubuntu/
           ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
+    extract-control-plane-ip:
+      steps:
+        - name: Set output
+          run: echo "The control plane IP is ${{ needs.extract-control-plane-ip.outputs.control_plane_ip }}"
