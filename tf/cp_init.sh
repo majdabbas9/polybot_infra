@@ -81,13 +81,13 @@ helm repo add argo https://argoproj.github.io/argo-helm || true
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
-# Check and install Argo CD Helm release
-#if helm list -n argocd | grep -qw argocd; then
-#  echo "Argo CD Helm release 'argocd' already exists in 'argocd', skipping."
-#else
-#  echo "Installing Argo CD Helm release 'argocd'..."
-#  helm install argocd argo/argo-cd --namespace argocd
-#fi
+ Check and install Argo CD Helm release
+if helm list -n argocd | grep -qw argocd; then
+  echo "Argo CD Helm release 'argocd' already exists in 'argocd', skipping."
+else
+  echo "Installing Argo CD Helm release 'argocd'..."
+  helm install argocd argo/argo-cd --namespace argocd
+fi
 
 # Install Ingress NGINX Helm chart
 if helm list -n ingress-nginx | grep -qw ingress-nginx; then
