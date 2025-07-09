@@ -3,10 +3,16 @@ name: Deploy
 
 on:
   workflow_call:
+    inputs:
+      control_plane_ip:
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
+        required: true
+      EC2_SSH_KEY:
         required: true
   workflow_dispatch:
 
@@ -26,7 +32,22 @@ jobs:
           aws-region: eu-west-1
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          echo "Control plane IP is $CONTROL_PLANE_IP"
+          echo "EC2 Username is ubuntu"
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/private_key
+          chmod 600 ~/.ssh/private_key
+          cat > ~/.ssh/config <<EOF
+          Host ec2
+              HostName $CONTROL_PLANE_IP
+              User ubuntu
+              IdentityFile ~/.ssh/private_key
+              StrictHostKeyChecking no
+          EOF
       - name: depoly polybot_dev
         env:
           PYTHONUNBUFFERED: 1
