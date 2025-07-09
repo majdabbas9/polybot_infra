@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: dev
   labels:
     app: polybot-dev
-    namespace: dev
   name: polybot-dev
 spec:
   replicas: 1
@@ -16,7 +16,7 @@ spec:
         app: polybot-dev
     spec:
       containers:
-      - image: ghcr.io/majdabbas9/telegram_bot_images:217
+      - image: ghcr.io/majdabbas9/telegram_bot_images:218
         name: polybot-container
         env:
           - name: TELEGRAM_BOT_TOKEN
