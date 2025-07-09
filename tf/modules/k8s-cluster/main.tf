@@ -683,6 +683,9 @@ resource "aws_launch_template" "worker_lt" {
     echo "[INFO] Running join command..."
     sudo $JOIN_CMD
 
+    growpart /dev/xvda 1
+    resize2fs /dev/xvda1 || xfs_growfs /
+
     swapoff -a
     (crontab -l 2>/dev/null || true; echo "@reboot /sbin/swapoff -a") | crontab -
   EOF
