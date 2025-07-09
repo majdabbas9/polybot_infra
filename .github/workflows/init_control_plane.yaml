@@ -93,11 +93,11 @@ jobs:
           PROD_SQS_URL='$PROD_SQS_URL' \
           bash -c '~/cp_init.sh'"
 
-#      - name: deploy argoCD
-#        working-directory: argoCD_main
-#        run: |
-#          scp app_for_apps.yaml ec2:/home/ubuntu/
-#          ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
+      - name: deploy argoCD
+        working-directory: argoCD_main
+        run: |
+          scp app_for_apps.yaml ec2:/home/ubuntu/
+          ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
 ##
 #
 #      - name: depoly polybot_dev
