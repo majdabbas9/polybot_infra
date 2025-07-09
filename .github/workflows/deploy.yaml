@@ -12,6 +12,9 @@ jobs:
   Deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: depoly polybot_dev
         env:
           PYTHONUNBUFFERED: 1
@@ -27,6 +30,7 @@ jobs:
           git add polybot-k8s/polybot-dev/yolo.yaml
           git add polybot-k8s/yolo-dev/polybot.yaml
           git add polybot-k8s/polybot-prod/polybot.yaml
+          git add polybot-k8s/yolo-prod/polybot.yaml
           # Commit changes if there are any, with a descriptive message
           git commit -m "ci: update polybot deployment YAMLs with latest image from SSM" || echo "No changes to commit"
 
