@@ -1,57 +1,39 @@
       # The name of the workflow
-name: infra deploy
+name: Deploy
 
 on:
-  push:
-    branches:
-     - dev
+  workflow_call:
   workflow_dispatch:
 
-env:
-  REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
-  REPO_NAME: ${{ github.event.repository.name }}
+permissions:
+  contents: write
+
 jobs:
   Deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure SSH
+      - name: depoly polybot_dev
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+          PYTHONUNBUFFERED: 1
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/private_key
-          chmod 600 ~/.ssh/private_key
-          cat > ~/.ssh/config << EOF
-          Host ec2
-              HostName $EC2_HOST
-              User $EC2_USERNAME
-              IdentityFile ~/.ssh/private_key
-              StrictHostKeyChecking no
-          EOF
-      - name: docker download
-        run: |
-          # download docker and copy docker compose files to EC2
-          scp docker_download.sh ec2:/home/${{ secrets.EC2_USERNAME }}/
-          ssh ec2 "bash /home/${{ secrets.EC2_USERNAME }}/docker_download.sh"
+          python3 argoCD_main/change_yaml.py --src polybot-k8s/polybot-dev/polybot.yaml --dest polybot-k8s/polybot-dev/polybot.yaml --ssm /majd/dev/polybot_image_name --region eu-west-1
+          python3 argoCD_main/change_yaml.py --src polybot-k8s/yolo-dev/yolo.yaml --dest polybot-k8s/yolo-dev/yolo.yaml --ssm /majd/dev/yolo_image_name --region eu-west-1
+          python3 argoCD_main/change_yaml.py --src polybot-k8s/polybot-prod/polybot.yaml --dest polybot-k8s/polybot-prod/polybot.yaml --ssm /majd/prod/polybot_image_name --region eu-west-1
+          python3 argoCD_main/change_yaml.py --src polybot-k8s/yolo-prod/yolo.yaml --dest polybot-k8s/yolo-prod/yolo.yaml --ssm /majd/prod/yolo_image_name --region eu-west-1
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: nginx container deploy
+          # Stage the updated polybot-dev YAML file
+          git add polybot-k8s/polybot-dev/yolo.yaml
+          git add polybot-k8s/yolo-dev/polybot.yaml
+          git add polybot-k8s/polybot-prod/polybot.yaml
+          # Commit changes if there are any, with a descriptive message
+          git commit -m "ci: update polybot deployment YAMLs with latest image from SSM" || echo "No changes to commit"
+
+          # Push changes back to the current branch
+          git push origin HEAD:${{ github.ref }}
+      - name: deploy argoCD
+        working-directory: argoCD_main
         run: |
-          scp -r Nginx ec2:/home/${{ secrets.EC2_USERNAME }}/
-        
-          ssh ec2 'bash -s' <<EOF
-          cd /home/${{ secrets.EC2_USERNAME }}/Nginx/
-          export APP_CERT="${{ secrets.APP_CERT }}"
-          export APP_KEY="${{ secrets.APP_KEY }}"
-          export APP_DEV_CERT="${{ secrets.APP_DEV_CERT }}"
-          export APP_DEV_KEY="${{ secrets.APP_DEV_KEY }}"
-          bash deploy.sh
-          
-      - name: Monitoring containers deploy
-        run: |
-          scp -r Monitoring ec2:/home/${{ secrets.EC2_USERNAME }}/
-          ssh ec2 "cd /home/${{ secrets.EC2_USERNAME }}/Monitoring/ && bash /home/${{ secrets.EC2_USERNAME }}/Monitoring/deploy.sh"
+          scp app_for_apps.yaml ec2:/home/ubuntu/
+          ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
