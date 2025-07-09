@@ -46,7 +46,7 @@ spec:
   selector:
     app: polybot-prod
   ports:
-    - port: 8080         # Internal port (what Ingress sees)
+    - port: 8443         # Internal port (what Ingress sees)
       targetPort: 8443   # Your app's container port
 ---
 apiVersion: networking.k8s.io/v1
