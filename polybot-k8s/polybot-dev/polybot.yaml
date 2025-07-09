@@ -36,7 +36,6 @@ spec:
                 key: DEV_SQS_URL
           - name: Nginx_url
             value: "majd.app.dev.fursa.click"
-
 ---
 apiVersion: v1
 kind: Service
