@@ -6,7 +6,7 @@ metadata:
   name: yolo-dev
   namespace: dev
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: yolo-dev
