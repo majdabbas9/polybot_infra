@@ -16,7 +16,7 @@ def update_image_from_ssm(src_yaml, dest_yaml, ssm_param_name, aws_region):
     ssm = boto3.client('ssm', region_name=aws_region)
 
     logger.info("Fetching image name from SSM Parameter Store")
-    response = ssm.get_parameter(Name=ssm_param_name)
+    response = ssm.get_parameter(Name=ssm_param_name, WithDecryption=True)
     new_image_name = response['Parameter']['Value']
     logger.info(f"Got image name from SSM: {new_image_name}")
 
