@@ -36,7 +36,7 @@ spec:
           value: polybot-service
         - name: STORAGE_TYPE
           value: dynamodb
-        image: AQICAHgqsvSanZ7EmiTe/XdfTsU/osZD2tgE9q6r9812xkf/7AFAXrg3a2gLTk7XEBFA+VtaAAAAgzCBgAYJKoZIhvcNAQcGoHMwcQIBADBsBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDFcuvwc1LilyM3bMngIBEIA/uIvJuvIyBG1jAUUrPTF4kHw3EIk9QQlsfInHhIsb51hErfpq/uEpgU6xsxjTets1JGzsOKc7Rc8ClWt2w7dd
+        image: ghcr.io/majdabbas9/yolo_prod_image:7
         name: yolo-container
         resources:
           limits:

@@ -34,5 +34,5 @@ spec:
               name: my-secrets-dev
         - name: NGINX_URL
           value: https://majd.app.dev.fursa.click
-        image: AQICAHgqsvSanZ7EmiTe/XdfTsU/osZD2tgE9q6r9812xkf/7AGnxgHykhWDGnekxFPGmFpsAAAAhzCBhAYJKoZIhvcNAQcGoHcwdQIBADBwBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKenmQ5gZG4HFEC4QgIBEIBDKcLxyDcQ0LP0Yh/jkbJWs+JpMsFwFat+tUhqclYvZd+QQwQbtbbsSIPv1cFL6tppzWuGwegUV0tzxKstjgm88lJHzw==
+        image: ghcr.io/majdabbas9/polybot_dev_image:222
         name: polybot-container
