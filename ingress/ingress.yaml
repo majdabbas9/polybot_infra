@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: majd.app.fursa.click
+  - host: majd.app.dev.fursa.click
     http:
       paths:
       - path: /

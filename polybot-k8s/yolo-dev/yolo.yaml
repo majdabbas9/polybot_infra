@@ -3,21 +3,21 @@ kind: Deployment
 metadata:
   namespace: dev
   labels:
-    app: polybot-dev
-  name: polybot-dev
+    app: yolo-dev
+  name: yolo-dev
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: polybot-dev
+      app: yolo-dev
   template:
     metadata:
       labels:
-        app: polybot-dev
+        app: yolo-dev
     spec:
       containers:
-      - image: ghcr.io/majdabbas9/telegram_bot_images:219
-        name: polybot-container
+      - image: ghcr.io/majdabbas9/yolo_image:51
+        name: yolo-container
         env:
           - name: TELEGRAM_BOT_TOKEN
             valueFrom:
@@ -34,17 +34,19 @@ spec:
               secretKeyRef:
                 name: my-secrets-dev
                 key: DEV_SQS_URL
-          - name: NGINX_URL
-            value: "https://majd.app.dev.fursa.click"
+          - name: POLYBOT_URL
+            value: "polybot-service"
+          - name: STORAGE_TYPE
+            value: "dynamodb"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: polybot-service
+  name: yolo-service
   namespace: dev
 spec:
   selector:
-    app: polybot-dev
+    app: yolo-dev
   ports:
     - port: 8080         # Internal port (what Ingress sees)
       targetPort: 8443   # Your app's container port

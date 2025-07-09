@@ -602,7 +602,7 @@ resource "aws_launch_template" "worker_lt" {
     security_groups             = [aws_security_group.node_SG.id]
   }
   block_device_mappings {
-    device_name = "/dev/sdf"  # This is typically the root device for Amazon Linux/Ubuntu
+    device_name = "/dev/root"  # This is typically the root device for Amazon Linux/Ubuntu
 
     ebs {
       volume_size = 20         # Size in GiB
