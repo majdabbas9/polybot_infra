@@ -3,9 +3,30 @@ kind: Service
 metadata:
   name: yolo-service
   namespace: dev
+  labels:
+    monitoring: "true"
 spec:
   selector:
     app: yolo-dev
   ports:
     - port: 8080         # Internal port (what Ingress sees)
       targetPort: 8080   # Your app's container port
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: yolo-service-monitor
+  namespace: monitoring
+  labels:
+    release: monitoring-stack  # must match your Prometheus release
+spec:
+  selector:
+    matchLabels:
+      monitoring: "true"
+  namespaceSelector:
+    matchNames:
+      - dev
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

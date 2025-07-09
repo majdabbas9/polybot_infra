@@ -2,7 +2,7 @@
 exec > >(tee -a setup.log) 2>&1
 set -euxo pipefail
 
-for ns in dev prod argocd ingress-nginx; do
+for ns in dev prod argocd ingress-nginx monitoring; do
   if ! kubectl get namespace "$ns" >/dev/null 2>&1; then
     echo "Creating namespace $ns"
     kubectl create namespace "$ns"
@@ -77,6 +77,7 @@ helm version
 echo "📦 Adding Argo CD and Ingress-NGINX Helm repositories..."
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
 helm repo add argo https://argoproj.github.io/argo-helm || true
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
 
 echo "🔄 Updating Helm repositories..."
 helm repo update
@@ -99,5 +100,16 @@ else
     --set controller.service.type=NodePort \
     --set controller.service.nodePorts.http="$HTTP_PORT" \
     --set controller.service.nodePorts.https="$HTTPS_PORT"
+fi
+
+# Install Prometheus and Grafana
+if helm list -n monitoring | grep -qw prometheus; then
+  echo "Prometheus Helm release 'prometheus' already exists in 'monitoring', skipping."
+else
+  echo "Installing Prometheus Helm release 'prometheus'..."
+  helm install monitoring-stack prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --set grafana.enabled=true \
+  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
 fi
 
