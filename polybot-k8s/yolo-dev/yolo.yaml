@@ -6,7 +6,7 @@ metadata:
     app: yolo-dev
   name: yolo-dev
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: yolo-dev
@@ -38,15 +38,3 @@ spec:
             value: "polybot-service"
           - name: STORAGE_TYPE
             value: "dynamodb"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: yolo-service
-  namespace: dev
-spec:
-  selector:
-    app: yolo-dev
-  ports:
-    - port: 8080         # Internal port (what Ingress sees)
-      targetPort: 8080   # Your app's container port
