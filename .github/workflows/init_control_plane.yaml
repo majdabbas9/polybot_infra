@@ -61,11 +61,9 @@ jobs:
           EOF
 
       - name: Install boto3
-        working-directory: tf
         run: pip3 install boto3 pyyaml
 
       - name: Test Python logging
-        working-directory: tf
         run: python3 test_log.py
 
       - name: Copy and Run Init Script on Control Plane
@@ -98,15 +96,22 @@ jobs:
         run: |
           scp app_for_apps.yaml ec2:/home/ubuntu/
           ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
-##
-#
-#      - name: depoly polybot_dev
-#        env:
-#          PYTHONUNBUFFERED: 1
-#        run: |
-#            python3 change_yaml.py --src polybot-k8s/polybot-dev/polybot.yaml --dest polybot-k8s/polybot-dev/polybot.yaml --ssm /majd/dev/polybot_image_name --region eu-west-1
-#            git config --global user.name "github-actions[bot]"
-#            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-#            git add polybot-k8s/polybot-dev/polybot.yaml
-#            git commit -m "Update polybot-dev YAML with latest image from SSM" || echo "No changes to commit"
-#            git push origin HEAD:${{ github.ref }}
+      - name: depoly polybot_dev
+        env:
+          PYTHONUNBUFFERED: 1
+        run: |
+            python3 argoCD_main/change_yaml.py --src polybot-k8s/polybot-dev/polybot.yaml --dest polybot-k8s/polybot-dev/polybot.yaml --ssm /majd/dev/polybot_image_name --region eu-west-1
+            python3 argoCD_main/change_yaml.py --src polybot-k8s/yolo-dev/polybot.yaml --dest polybot-k8s/yolo-dev/polybot.yaml --ssm /majd/dev/yolo_image_name --region eu-west-1
+          
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            
+            # Stage the updated polybot-dev YAML file
+            git add polybot-k8s/polybot-dev/yolo.yaml
+            git add polybot-k8s/yolo-dev/polybot.yaml
+            
+            # Commit changes if there are any, with a descriptive message
+            git commit -m "ci: update polybot deployment YAMLs with latest image from SSM" || echo "No changes to commit"
+            
+            # Push changes back to the current branch
+            git push origin HEAD:${{ github.ref }}
