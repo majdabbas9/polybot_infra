@@ -606,7 +606,7 @@ resource "aws_launch_template" "worker_lt" {
 
     ebs {
       volume_size           = 20      # 20 GiB root volume
-      volume_type           = "gp3"
+      volume_type           = "gp2"
       delete_on_termination = true
     }
   }
