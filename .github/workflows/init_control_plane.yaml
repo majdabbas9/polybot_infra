@@ -20,10 +20,10 @@ permissions:
   contents: write
 
 jobs:
-  init_control_plane:
+  Init_control_plane:
     runs-on: ubuntu-latest
     outputs:
-      control_plane_ip: ${{ steps.extract_ip.outputs.cp_ip_next_wf }}
+      control-plane-ip: ${{ steps.extract-ip.outputs.cp-ip-next-wf }}
 
     steps:
       - name: Checkout code
@@ -39,13 +39,13 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name : get host name
-        id: extract_ip
+        id: extract-ip
         run: |
           cd tf
           terraform init
           ip=$(terraform output -raw control_plane_public_ip)
           echo "CONTROL_PLANE_IP=$ip" >> $GITHUB_ENV
-          echo "cp_ip_next_wf=$ip" >> $GITHUB_OUTPUT
+          echo "cp-ip-next-wf=$ip" >> $GITHUB_OUTPUT
           cd ..
 
       - name: Configure SSH
@@ -93,10 +93,10 @@ jobs:
           PROD_SQS_URL='$PROD_SQS_URL' \
           bash -c '~/cp_init.sh'"
   Deploy:
-    needs: init_control_plane
+    needs: Init_control_plane
     uses: ./.github/workflows/deploy.yaml
     with:
-      control_plane_ip: ${{ needs.init_control_plane.outputs.control_plane_ip }}
+      control-plane-ip: ${{ needs.Init_control_plane.outputs.control-plane-ip }}
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

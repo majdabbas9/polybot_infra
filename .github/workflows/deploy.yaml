@@ -4,7 +4,7 @@ name: Deploy
 on:
   workflow_call:
     inputs:
-      control_plane_ip:
+      control-plane-ip:
         required: true
         type: string
     secrets:
@@ -37,14 +37,14 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          echo "Control plane IP is $CONTROL_PLANE_IP"
+          echo "Control plane IP is ${{ inputs.control-plane-ip }}"
           echo "EC2 Username is ubuntu"
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/private_key
           chmod 600 ~/.ssh/private_key
           cat > ~/.ssh/config <<EOF
           Host ec2
-              HostName $CONTROL_PLANE_IP
+              HostName ${{ inputs.control-plane-ip }}
               User ubuntu
               IdentityFile ~/.ssh/private_key
               StrictHostKeyChecking no
