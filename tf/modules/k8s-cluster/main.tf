@@ -196,6 +196,15 @@ resource "aws_security_group_rule" "cp_allow_http" {
   security_group_id = aws_security_group.cp_SG.id
   description       = "Allow HTTP to control plane"
 }
+resource "aws_security_group_rule" "cp_allow_http2" {
+  type              = "ingress"
+  from_port         = 3000
+  to_port           = 3000
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.cp_SG.id
+  description       = "Allow HTTP to control plane"
+}
 
 resource "aws_security_group_rule" "cp_allow_egress" {
   type              = "egress"
