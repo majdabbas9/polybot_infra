@@ -92,35 +92,12 @@ jobs:
           DEV_SQS_URL='$DEV_SQS_URL' \
           PROD_SQS_URL='$PROD_SQS_URL' \
           bash -c '~/cp_init.sh'"
-
-      - name: depoly polybot_dev
-        env:
-          PYTHONUNBUFFERED: 1
-        run: |
-          python3 argoCD_main/change_yaml.py --src polybot-k8s/polybot-dev/polybot.yaml --dest polybot-k8s/polybot-dev/polybot.yaml --ssm /majd/dev/polybot_image_name --region eu-west-1
-          python3 argoCD_main/change_yaml.py --src polybot-k8s/yolo-dev/yolo.yaml --dest polybot-k8s/yolo-dev/yolo.yaml --ssm /majd/dev/yolo_image_name --region eu-west-1
-          python3 argoCD_main/change_yaml.py --src polybot-k8s/polybot-prod/polybot.yaml --dest polybot-k8s/polybot-prod/polybot.yaml --ssm /majd/prod/polybot_image_name --region eu-west-1
-          python3 argoCD_main/change_yaml.py --src polybot-k8s/yolo-prod/yolo.yaml --dest polybot-k8s/yolo-prod/yolo.yaml --ssm /majd/prod/yolo_image_name --region eu-west-1
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Stage the updated polybot-dev YAML file
-          git add polybot-k8s/polybot-dev/polybot.yaml
-          git add polybot-k8s/yolo-dev/yolo.yaml
-          git add polybot-k8s/polybot-prod/polybot.yaml
-          git add polybot-k8s/yolo-prod/yolo.yaml
-          # Commit changes if there are any, with a descriptive message
-          git commit -m "ci: update polybot deployment YAMLs with latest image from SSM" || echo "No changes to commit"
-          
-          # Push changes back to the current branch
-          git push origin HEAD:${{ github.ref }}
-
-      - name: deploy argoCD
-        working-directory: argoCD_main
-        run: |
-          scp app_for_apps.yaml ec2:/home/ubuntu/
-          ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
-    extract-control-plane-ip:
-      steps:
-        - name: Set output
-          run: echo "The control plane IP is ${{ needs.extract-control-plane-ip.outputs.control_plane_ip }}"
+  Deploy:
+    needs: init_control_plane
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      control_plane_ip: ${{ needs.init_control_plane.outputs.control_plane_ip }}
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
