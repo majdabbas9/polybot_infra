@@ -81,7 +81,7 @@ helm repo add argo https://argoproj.github.io/argo-helm || true
 echo "🔄 Updating Helm repositories..."
 helm repo update
 
-Check and install Argo CD Helm release
+# Check and install Argo CD Helm release
 if helm list -n argocd | grep -qw argocd; then
   echo "Argo CD Helm release 'argocd' already exists in 'argocd', skipping."
 else
