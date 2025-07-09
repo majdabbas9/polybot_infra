@@ -87,6 +87,6 @@ jobs:
           DEV_SQS_URL='$DEV_SQS_URL' \
           PROD_SQS_URL='$PROD_SQS_URL' \
           bash -c '~/cp_init.sh'"
-      - name:  Deploy
-        needs: init_control_plane
-        uses: ./.github/workflows/deploy.yaml
+  Deploy:
+    needs: init_control_plane
+    uses: ./.github/workflows/deploy.yaml
