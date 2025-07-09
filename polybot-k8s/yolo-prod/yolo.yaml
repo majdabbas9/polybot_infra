@@ -33,7 +33,7 @@ spec:
               key: SQS_URL
               name: my-secrets-prod
         - name: POLYBOT_URL
-          value: polybot-service
+          value: polybot-prod-service
         - name: STORAGE_TYPE
           value: dynamodb
         image: ghcr.io/majdabbas9/yolo_prod_image:7
