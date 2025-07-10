@@ -36,7 +36,7 @@ spec:
           value: polybot-dev-service
         - name: STORAGE_TYPE
           value: dynamodb
-        image: ghcr.io/majdabbas9/yolo_dev_image:55
+        image: ghcr.io/majdabbas9/yolo_dev_image:56
         name: yolo-container
         resources:
           limits:
