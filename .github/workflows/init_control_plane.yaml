@@ -92,12 +92,8 @@ jobs:
           DEV_SQS_URL='$DEV_SQS_URL' \
           PROD_SQS_URL='$PROD_SQS_URL' \
           bash -c '~/cp_init.sh'"
-  Deploy:
-    needs: Init_control_plane
-    uses: ./.github/workflows/deploy.yaml
-    with:
-      control-plane-ip: ${{ needs.Init_control_plane.outputs.control-plane-ip }}
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: deploy argoCD
+        run: |
+          scp argoCD_main/app_for_apps.yaml ec2:/home/ubuntu/
+          ssh ec2 "kubectl apply -f ~/app_for_apps.yaml"
