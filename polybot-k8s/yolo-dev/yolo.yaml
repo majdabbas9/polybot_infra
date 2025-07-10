@@ -31,6 +31,10 @@ spec:
           value: polybot-dev-service
         - name: STORAGE_TYPE
           value: dynamodb
+        - name: DYNAMODB_SESSION
+          value: majd_dev_prediction_session
+        - name: DYNAMODB_OBJECTS
+          value: majd_dev_detection_objects
         image: ghcr.io/majdabbas9/yolo_dev_image:56
         name: yolo-container
         resources:
