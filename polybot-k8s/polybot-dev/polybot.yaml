@@ -38,5 +38,5 @@ spec:
           value: majd_dev_prediction_session
         - name: DYNAMODB_OBJECTS
           value: majd_dev_detection_objects
-        image: ghcr.io/majdabbas9/polybot_dev_image:226
+        image: ghcr.io/majdabbas9/polybot_dev_image:231
         name: polybot-container
