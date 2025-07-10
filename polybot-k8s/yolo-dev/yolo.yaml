@@ -35,7 +35,7 @@ spec:
           value: majd_dev_prediction_session
         - name: DYNAMODB_OBJECTS
           value: majd_dev_detection_objects
-        image: ghcr.io/majdabbas9/yolo_dev_image:57
+        image: ghcr.io/majdabbas9/yolo_dev_image:58
         name: yolo-container
         resources:
           limits:
